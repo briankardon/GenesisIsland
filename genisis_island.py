@@ -44,7 +44,7 @@ for bleh in range(72):
         ##        dowater=(3+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
         ##except IndexError:
         ##    pass
-        board[bleh].append((randint(150,230),goodrand('choice',('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))))
+        board[bleh].append((randint(150,230),'grass'))####((randint(150,230),goodrand('choice',('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))))
 yx=randint(1,72)
 yy=randint(1,36)
 cool=0
