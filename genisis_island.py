@@ -24,7 +24,7 @@ def goodrand(which,*args):
 screen=pygame.display.set_mode((width, height))
 board=[]
 first=1
-map=make_map((720,1440), blur_size=12, max_value=255, integer=True)
+map=make_map((72,36), blur_size=2, max_value=255, integer=True)
 for bleh in range(72):
     board.append([])
     for bluh in range(36):
