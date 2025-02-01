@@ -23,6 +23,7 @@ def goodrand(which,*args):
 screen=pygame.display.set_mode((width, height))
 board=[]
 first=1
+map=make_map((1440,720))
 for bleh in range(72):
     board.append([])
     for bluh in range(36):
@@ -31,6 +32,35 @@ for bleh in range(72):
         dotrees=2
         dosheep=1
         dowater=2
+        if map[bleh,bluh,0]>0 and map[bleh,bluh,0]<51:
+            domountains=1
+            dotrees=1
+            dosheep=1
+            dowater=1
+        if map[bleh,bluh,0]>51 and map[bleh,bluh,0]<102:
+            dograss=1
+            domountains=4
+            dotrees=1
+            dosheep=1
+            dowater=1
+        if map[bleh,bluh,0]>102 and map[bleh,bluh,0]<153:
+            dograss=1
+            domountains=1
+            dotrees=4
+            dosheep=1
+            dowater=1
+        if map[bleh,bluh,0]>153 and map[bleh,bluh,0]<204:
+            dograss=1
+            domountains=1
+            dotrees=1
+            dosheep=4
+            dowater=1
+        if map[bleh,bluh,0]>205 and map[bleh,bluh,0]<255:
+            dograss=1
+            domountains=1
+            dotrees=1
+            dosheep=1
+            dowater=4
         ##try:
         ##    if board[bleh][bluh-1]=='grass' or board[bleh][bluh+1]=='grass' or board[bleh+1][bluh]=='grass' or board[bleh-1][bluh]=='grass':
         ##        dograss=(5+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
@@ -44,7 +74,7 @@ for bleh in range(72):
         ##        dowater=(3+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
         ##except IndexError:
         ##    pass
-        board[bleh].append((randint(150,230),'grass'))####((randint(150,230),goodrand('choice',('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))))
+        board[bleh].append((randint(150,230),goodrand('choice',('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))))
 yx=randint(1,72)
 yy=randint(1,36)
 cool=0
