@@ -24,7 +24,7 @@ def goodrand(which,*args):
 screen=pygame.display.set_mode((width, height))
 board=[]
 first=1
-map=make_map((1440,720), blur_size=12, min_value=0, max_value=255, integer=True)
+map=make_map((720,1440), blur_size=12, max_value=255, integer=True)
 for bleh in range(72):
     board.append([])
     for bluh in range(36):
@@ -33,30 +33,31 @@ for bleh in range(72):
         dotrees=2
         dosheep=1
         dowater=2
-        if map[bleh,bluh]>0 and map[bleh,bluh]<51:
+        if map[bleh,bluh]>-1 and map[bleh,bluh]<51:
+            dograss=4
             domountains=1
             dotrees=1
             dosheep=1
             dowater=1
-        if map[bleh,bluh]>51 and map[bleh,bluh]<102:
+        if map[bleh,bluh]>50 and map[bleh,bluh]<102:
             dograss=1
             domountains=4
             dotrees=1
             dosheep=1
             dowater=1
-        if map[bleh,bluh]>102 and map[bleh,bluh]<153:
+        if map[bleh,bluh]>101 and map[bleh,bluh]<153:
             dograss=1
             domountains=1
             dotrees=4
             dosheep=1
             dowater=1
-        if map[bleh,bluh]>153 and map[bleh,bluh]<204:
+        if map[bleh,bluh]>152 and map[bleh,bluh]<204:
             dograss=1
             domountains=1
             dotrees=1
             dosheep=4
             dowater=1
-        if map[bleh,bluh]>205 and map[bleh,bluh]<255:
+        if map[bleh,bluh]>203 and map[bleh,bluh]<256:
             dograss=1
             domountains=1
             dotrees=1
