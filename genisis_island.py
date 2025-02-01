@@ -1,6 +1,7 @@
 import pygame
 from random import randint
 import sys
+from MapTools import *
 pygame.init()
 my_font = pygame.font.SysFont('Comic Sans MS', 30)
 Clock=pygame.time.Clock()
@@ -23,7 +24,7 @@ def goodrand(which,*args):
 screen=pygame.display.set_mode((width, height))
 board=[]
 first=1
-map=make_map((1440,720))
+map=make_map((1440,720), blur_size=12, min_value=0, max_value=255, integer=True)
 for bleh in range(72):
     board.append([])
     for bluh in range(36):
@@ -32,30 +33,30 @@ for bleh in range(72):
         dotrees=2
         dosheep=1
         dowater=2
-        if map[bleh,bluh,0]>0 and map[bleh,bluh,0]<51:
+        if map[bleh,bluh]>0 and map[bleh,bluh]<51:
             domountains=1
             dotrees=1
             dosheep=1
             dowater=1
-        if map[bleh,bluh,0]>51 and map[bleh,bluh,0]<102:
+        if map[bleh,bluh]>51 and map[bleh,bluh]<102:
             dograss=1
             domountains=4
             dotrees=1
             dosheep=1
             dowater=1
-        if map[bleh,bluh,0]>102 and map[bleh,bluh,0]<153:
+        if map[bleh,bluh]>102 and map[bleh,bluh]<153:
             dograss=1
             domountains=1
             dotrees=4
             dosheep=1
             dowater=1
-        if map[bleh,bluh,0]>153 and map[bleh,bluh,0]<204:
+        if map[bleh,bluh]>153 and map[bleh,bluh]<204:
             dograss=1
             domountains=1
             dotrees=1
             dosheep=4
             dowater=1
-        if map[bleh,bluh,0]>205 and map[bleh,bluh,0]<255:
+        if map[bleh,bluh]>205 and map[bleh,bluh]<255:
             dograss=1
             domountains=1
             dotrees=1
