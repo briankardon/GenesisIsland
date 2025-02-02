@@ -70,7 +70,7 @@ tiles = pygame.sprite.Group()
 first=1
 map=make_map((72,36), blur_size=3, max_value=1, integer=False)
 toisland=map
-map=islandify(toisland, 10, 2)
+map=islandify(toisland, 0.25, 2)
 for bleh in range(72):
     board.append([])
     for bluh in range(36):
@@ -80,7 +80,7 @@ for bleh in range(72):
         dosheep=1
         dowater=1
         if map[bleh,bluh]>0 and map[bleh,bluh]<0.25:
-            dowater=10
+            dowater=15
         elif map[bleh,bluh]>0.25 and map[bleh,bluh]<0.5:
             dograss=10
         elif map[bleh,bluh]>0.5 and map[bleh,bluh]<0.75:
@@ -150,7 +150,7 @@ class Pathfinder:
                 for bluh in range(len(self.path[bleh])):
                     if self.path[bleh][bluh]==self.y+1:
                         self.y+=1
-class team:
+class Team:
     def __init__(self,x,y,kind,board):
         self.x=x
         self.y=y
@@ -158,8 +158,18 @@ class team:
         self.board=board
         self.gox=self.x
         self.goy=self.y
-        self.life=100
-    def tell(startx,starty,x,y,harvest):
+        self.life=10
+        if kind=='miner':
+            self.color='black'
+        if kind=='miner':
+            self.color='green'
+        if kind=='miner':
+            self.color='orange'
+        if kind=='miner':
+            self.color='blue'
+        if kind=='miner':
+            self.color='red'
+    def tell(self,startx,starty,x,y,harvest):
         for bleh in range(len(self.board)):
             for bluh in range(len(self.board[bleh])):
                 if bleh>startx and bleh<x and bluh>starty and bluh<y:
@@ -175,30 +185,33 @@ class team:
                         return bleh,bluh,None
                     if self.kind=='seller' and self.board[bleh][bluh][1]=='sheep':
                         return bleh,bluh,None
-        def move():
-            if self.gox>self.x:
-                self.x+=1
-            else:
-                self.x-=1
-            if self.goy>self.y:
-                self.y+=1
-            else:
-                self.y-=1
-        def draw():
-            pygame.draw.line(screen,'red',((self.x*20)-50,self.y+50),(((self.x*20)-50)+self.life,self.y+50),3)
+    def move(self):
+        if self.gox>self.x:
+            self.x+=1
+        else:
+            self.x-=1
+        if self.goy>self.y:
+            self.y+=1
+        else:
+            self.y-=1
+    def draw(self):
+        pygame.draw.line(screen,'red',((self.x*20)-50,self.y+50),(((self.x*20)-50)+self.life,self.y+50),3)
+        pygame.draw.circle(screen,self.color,(self.x,self.y),10)
 x,y=pygame.mouse.get_pos()
+dude=Team(2,2,'miner',board)
 while True:
-    try:
-        dude.makepath()
-        dude.move()
-    except NameError:
-        pass
+    ##try:
+    ##    dude.makepath()
+    ##    dude.move()
+    ##except NameError:
+    ##    pass
     screen.fill('blue')
     pygame.mouse.set_visible(False)
     x,y=pygame.mouse.get_pos()
     for event in pygame.event.get():
         if event.type==pygame.MOUSEBUTTONDOWN:
-            dude=Pathfinder(board,x,y,yx,yy)
+            pass
+            ##dude=Pathfinder(board,x,y,yx,yy)
     key=pygame.key.get_pressed()
     if key[pygame.K_x]:
         pygame.quit()
@@ -207,11 +220,12 @@ while True:
     tiles.draw(screen)
 
     pygame.draw.circle(screen,[255,100,100],(x,y),5)
-    pygame.draw.circle(screen,'red',(yx*20-10,yy*20-10),10)
-    pygame.draw.line(screen,'white',(yx*20-10,yy*20-10),(x,y),2)
-    try:
-        pygame.draw.circle(screen,'red',(dude.x*20,dude.y*20),10)
-    except NameError:
-        pass
+    ##pygame.draw.circle(screen,'red',(yx*20-10,yy*20-10),10)
+    ##pygame.draw.line(screen,'white',(yx*20-10,yy*20-10),(x,y),2)
+    ##try:
+    ##    pygame.draw.circle(screen,'red',(dude.x*20,dude.y*20),10)
+    ##except NameError:
+    ##    pass
+    dude.draw()
     pygame.display.flip()
     Clock.tick(60)
