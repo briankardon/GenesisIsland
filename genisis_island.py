@@ -21,6 +21,48 @@ def goodrand(which,*args):
         return int(do)
     else:
         return do
+
+class Tile:
+    size=20
+    def __init__(self, tile_coord=(0, 0), biome='plains', grass_color=None):
+        self.biome = biome
+        self.entities = []
+        self.resources = []
+        self.image = None
+        if grass_color is None:
+            self.grass_color=randint(150,230)
+        else:
+            self.grass_color = grass_color
+        self.tile_coord = tile_coord
+        self.update_image()
+        self.update_rect()
+
+    def update_rect():
+        tile_coords = [*self.tile_coords, 1, 1]
+        coords = [coord * Tile.size for coord in tile_coords]
+        self.rect = pygame.Rect(*coords)
+
+    def update_image(self):
+        s = Tile.size
+        self.image = pygame.Surface((s, s))
+        if self.biome == 'water':
+            # Draw water background
+            self.image.fill('blue')
+        else:
+            # Draw grass background
+            self.image.fill([0, self.grass_color, 0])
+        if self.biome == 'mountains':
+            pygame.draw.polygon(self.image, 'gray', s,(s*0.5,0),(s,s),(0,s))
+        if board[bleh][bluh][1]=='trees':
+            pygame.draw.line(self.image,'brown',(s*0.5,s*0.5),(s*0.5,s),5)
+            pygame.draw.rect(self.image,[0,100,0],(0,0,s,s*0.5))
+        if board[bleh][bluh][1]=='sheep':
+            pygame.draw.rect(self.image,'white',(s*0.25,0,s*3*0.25,s*0.5))
+            pygame.draw.rect(self.image,'black',(0,0,s*0.25,s*0.25))
+            pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
+            pygame.draw.line(self.image,'black',(s*0.9,s*0.5),(s*0.9,s),3)
+
+
 screen=pygame.display.set_mode((width, height))
 board=[]
 first=1
