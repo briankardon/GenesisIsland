@@ -92,19 +92,23 @@ def make_map(size, blur_size=12, min_value=0, max_value=1, integer=False):
         mask = make_diamond_mask(subpow+1)
         averages[mask] = 0
         map[::halfstep, ::halfstep] += averages
+    map = gaussian_filter(map, (blur_size, blur_size), mode='wrap')
+    map = center_crop(map, size)
     map_max = map.max()
     map_min = map.min()
     mapRange = map_max-map_min
     new_range = max_value-min_value
-    map = gaussian_filter(map, (blur_size, blur_size), mode='wrap')
     map = (map - map_min) * (new_range / mapRange) + min_value
-    map = center_crop(map, size)
     if integer:
         return map.astype('uint8')
     else:
         return map
 
 if __name__ == '__main__':
+    map = make_map((800, 600), blur_size=12, max_value=1, integer=False)
+    print(map.min(), map.mean(), map.max())
+
+
     map = make_map((800, 600), blur_size=12, max_value=255, integer=True)
     map3 = np.zeros(map.shape+(3,), dtype='uint8')
     map3[:, :, 0] = (map < 150) * map
