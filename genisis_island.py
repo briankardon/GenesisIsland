@@ -22,9 +22,10 @@ def goodrand(which,*args):
     else:
         return do
 
-class Tile:
+class Tile(pygame.sprite.Sprite):
     size=20
-    def __init__(self, tile_coord=(0, 0), biome='plains', grass_color=None):
+    def __init__(self, *args, tile_coords=(0, 0), biome='plains', grass_color=None, **kwargs):
+        super().__init__(*args, **kwargs)
         self.biome = biome
         self.entities = []
         self.resources = []
@@ -33,11 +34,11 @@ class Tile:
             self.grass_color=randint(150,230)
         else:
             self.grass_color = grass_color
-        self.tile_coord = tile_coord
+        self.tile_coords = tile_coords
         self.update_image()
         self.update_rect()
 
-    def update_rect():
+    def update_rect(self):
         tile_coords = [*self.tile_coords, 1, 1]
         coords = [coord * Tile.size for coord in tile_coords]
         self.rect = pygame.Rect(*coords)
@@ -52,11 +53,11 @@ class Tile:
             # Draw grass background
             self.image.fill([0, self.grass_color, 0])
         if self.biome == 'mountains':
-            pygame.draw.polygon(self.image, 'gray', s,(s*0.5,0),(s,s),(0,s))
-        if board[bleh][bluh][1]=='trees':
+            pygame.draw.polygon(self.image, 'gray', ((0, s), (s*0.5,0),(s,s),(0,s)))
+        if self.biome == 'trees':
             pygame.draw.line(self.image,'brown',(s*0.5,s*0.5),(s*0.5,s),5)
             pygame.draw.rect(self.image,[0,100,0],(0,0,s,s*0.5))
-        if board[bleh][bluh][1]=='sheep':
+        if self.biome == 'sheep':
             pygame.draw.rect(self.image,'white',(s*0.25,0,s*3*0.25,s*0.5))
             pygame.draw.rect(self.image,'black',(0,0,s*0.25,s*0.25))
             pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
@@ -64,7 +65,8 @@ class Tile:
 
 
 screen=pygame.display.set_mode((width, height))
-board=[]
+board = []
+tiles = pygame.sprite.Group()
 first=1
 map=make_map((72,36), blur_size=3, max_value=1, integer=False)
 toisland=map
@@ -72,49 +74,23 @@ map=islandify(toisland, 10, 2)
 for bleh in range(72):
     board.append([])
     for bluh in range(36):
-        dograss=4
+        dograss=1
         domountains=1
-        dotrees=2
-        dosheep=3
-        dowater=2
+        dotrees=1
+        dosheep=1
+        dowater=1
         if map[bleh,bluh]>0 and map[bleh,bluh]<0.25:
-            dograss=1
-            domountains=1
-            dotrees=1
-            dosheep=1
             dowater=10
         elif map[bleh,bluh]>0.25 and map[bleh,bluh]<0.5:
             dograss=10
-            domountains=1
-            dotrees=1
-            dosheep=1
-            dowater=1
         elif map[bleh,bluh]>0.5 and map[bleh,bluh]<0.75:
-            dograss=1
-            domountains=1
             dotrees=10
-            dosheep=1
-            dowater=1
         elif map[bleh,bluh]>0.75 and map[bleh,bluh]<1:
-            dograss=1
             domountains=10
-            dotrees=1
-            dosheep=1
-            dowater=1
-        ##try:
-        ##    if board[bleh][bluh-1]=='grass' or board[bleh][bluh+1]=='grass' or board[bleh+1][bluh]=='grass' or board[bleh-1][bluh]=='grass':
-        ##        dograss=(5+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
-        ##    if board[bleh][bluh-1]=='mountains' or board[bleh][bluh+1]=='mountains' or board[bleh+1][bluh]=='mountains' or board[bleh-1][bluh]=='mountains':
-        ##        domountains=(2+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
-        ##    if board[bleh][bluh-1]=='trees' or board[bleh][bluh+1]=='trees' or board[bleh+1][bluh]=='trees' or board[bleh-1][bluh]=='trees':
-        ##        dotrees=(3+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
-        ##    if board[bleh][bluh-1]=='sheep' or board[bleh][bluh+1]=='sheep' or board[bleh+1][bluh]=='sheep' or board[bleh-1][bluh]=='sheep':
-        ##        dosheep=(2+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
-        ##    if board[bleh][bluh-1]=='water' or board[bleh][bluh+1]=='water' or board[bleh+1][bluh]=='water' or board[bleh-1][bluh]=='water':
-        ##        dowater=(3+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
-        ##except IndexError:
-        ##    pass
-        board[bleh].append((randint(150,230),goodrand('choice',('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))))
+        biome = goodrand('choice',('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))
+        new_tile = Tile(tile_coords=(bleh, bluh), biome=biome)
+        board[bleh].append(new_tile)
+        tiles.add(new_tile)
 yx=randint(1,72)
 yy=randint(1,36)
 cool=0
@@ -227,20 +203,9 @@ while True:
     if key[pygame.K_x]:
         pygame.quit()
         sys.exit()
-    for bleh in range(len(board)):
-        for bluh in range(len(board[bleh])):
-            if board[bleh][bluh][1]!='water':
-                pygame.draw.rect(screen,[0,board[bleh][bluh][0],0],(bleh*20,bluh*20,20,20))
-            if board[bleh][bluh][1]=='mountains':
-                pygame.draw.polygon(screen, 'gray', ((bleh*20,(bluh*20)+20),((bleh*20)+10,bluh*20),((bleh*20)+20,(bluh*20)+20),(bleh*20,(bluh*20)+20)))
-            if board[bleh][bluh][1]=='trees':
-                pygame.draw.line(screen,'brown',((bleh*20)+10,(bluh*20)+10),((bleh*20)+10,(bluh*20)+20),5)
-                pygame.draw.rect(screen,[0,100,0],(bleh*20,bluh*20,20,10))
-            if board[bleh][bluh][1]=='sheep':
-                pygame.draw.rect(screen,'white',((bleh*20)+5,bluh*20,15,10))
-                pygame.draw.rect(screen,'black',(bleh*20,bluh*20,5,5))
-                pygame.draw.line(screen,'black',(bleh*20+6,bluh*20+10),(bleh*20+6,bluh*20+20),3)
-                pygame.draw.line(screen,'black',(bleh*20+18,bluh*20+10),(bleh*20+18,bluh*20+20),3)
+
+    tiles.draw(screen)
+
     pygame.draw.circle(screen,[255,100,100],(x,y),5)
     pygame.draw.circle(screen,'red',(yx*20-10,yy*20-10),10)
     pygame.draw.line(screen,'white',(yx*20-10,yy*20-10),(x,y),2)
