@@ -66,45 +66,41 @@ class Tile:
 screen=pygame.display.set_mode((width, height))
 board=[]
 first=1
-map=make_map((72,36), blur_size=2, max_value=255, integer=True)
+map=make_map((72,36), blur_size=3, max_value=1, integer=False)
+toisland=map
+map=islandify(toisland, 10, 2)
 for bleh in range(72):
     board.append([])
     for bluh in range(36):
         dograss=4
         domountains=1
         dotrees=2
-        dosheep=1
+        dosheep=3
         dowater=2
-        if map[bleh,bluh]>-1 and map[bleh,bluh]<51:
-            dograss=4
-            domountains=1
-            dotrees=1
-            dosheep=1
-            dowater=1
-        if map[bleh,bluh]>50 and map[bleh,bluh]<102:
-            dograss=1
-            domountains=4
-            dotrees=1
-            dosheep=1
-            dowater=1
-        if map[bleh,bluh]>101 and map[bleh,bluh]<153:
-            dograss=1
-            domountains=1
-            dotrees=4
-            dosheep=1
-            dowater=1
-        if map[bleh,bluh]>152 and map[bleh,bluh]<204:
-            dograss=1
-            domountains=1
-            dotrees=1
-            dosheep=4
-            dowater=1
-        if map[bleh,bluh]>203 and map[bleh,bluh]<256:
+        if map[bleh,bluh]>0 and map[bleh,bluh]<0.25:
             dograss=1
             domountains=1
             dotrees=1
             dosheep=1
-            dowater=4
+            dowater=10
+        elif map[bleh,bluh]>0.25 and map[bleh,bluh]<0.5:
+            dograss=10
+            domountains=1
+            dotrees=1
+            dosheep=1
+            dowater=1
+        elif map[bleh,bluh]>0.5 and map[bleh,bluh]<0.75:
+            dograss=1
+            domountains=1
+            dotrees=10
+            dosheep=1
+            dowater=1
+        elif map[bleh,bluh]>0.75 and map[bleh,bluh]<1:
+            dograss=1
+            domountains=10
+            dotrees=1
+            dosheep=1
+            dowater=1
         ##try:
         ##    if board[bleh][bluh-1]=='grass' or board[bleh][bluh+1]=='grass' or board[bleh+1][bluh]=='grass' or board[bleh-1][bluh]=='grass':
         ##        dograss=(5+999999999999999999999999999999999999999999999999999*98999999999999999999999999*999999999999999999999999)
@@ -178,6 +174,42 @@ class Pathfinder:
                 for bluh in range(len(self.path[bleh])):
                     if self.path[bleh][bluh]==self.y+1:
                         self.y+=1
+class team:
+    def __init__(self,x,y,kind,board):
+        self.x=x
+        self.y=y
+        self.kind=kind
+        self.board=board
+        self.gox=self.x
+        self.goy=self.y
+        self.life=100
+    def tell(startx,starty,x,y,harvest):
+        for bleh in range(len(self.board)):
+            for bluh in range(len(self.board[bleh])):
+                if bleh>startx and bleh<x and bluh>starty and bluh<y:
+                    if self.kind=='miner' and self.board[bleh][bluh][1]=='mountains':
+                        return bleh,bluh,None
+                    if self.kind=='lumberjack' and self.board[bleh][bluh][1]=='trees':
+                        return bleh,bluh,None
+                    if self.kind=='farmer' and self.board[bleh][bluh][1]=='grass' and harvest==True:
+                        return bleh,bluh,True
+                    if self.kind=='farmer' and self.board[bleh][bluh][1]=='grass' and harvest==False:
+                        return bleh,bluh,False
+                    if self.kind=='waterbro' and self.board[bleh][bluh][1]=='water':
+                        return bleh,bluh,None
+                    if self.kind=='seller' and self.board[bleh][bluh][1]=='sheep':
+                        return bleh,bluh,None
+        def move():
+            if self.gox>self.x:
+                self.x+=1
+            else:
+                self.x-=1
+            if self.goy>self.y:
+                self.y+=1
+            else:
+                self.y-=1
+        def draw():
+            pygame.draw.line(screen,'red',((self.x*20)-50,self.y+50),(((self.x*20)-50)+self.life,self.y+50),3)
 x,y=pygame.mouse.get_pos()
 while True:
     try:
