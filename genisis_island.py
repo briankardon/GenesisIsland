@@ -2,16 +2,13 @@ import pygame
 from random import randint
 import sys
 from MapTools import *
+from random import randint, choice
+
 pygame.init()
 my_font = pygame.font.SysFont('Comic Sans MS', 30)
 Clock=pygame.time.Clock()
-width=1440
-height=720
+
 def goodrand(which,*args):
-    if which=='randint':
-        from random import randint
-    if which=='choice':
-        from random import choice
     ret=[]
     for bleh in range(len(args)):
         for blah in range(args[bleh][1]):
@@ -19,11 +16,11 @@ def goodrand(which,*args):
     do=choice(ret)
     if which=='randint':
         return int(do)
-    else:
+    elif which=='choice':
         return do
 
 class Tile(pygame.sprite.Sprite):
-    size=20
+    size=10
     def __init__(self, *args, tile_coords=(0, 0), biome='plains', grass_color=None, **kwargs):
         super().__init__(*args, **kwargs)
         self.biome = biome
@@ -63,14 +60,17 @@ class Tile(pygame.sprite.Sprite):
             pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
             pygame.draw.line(self.image,'black',(s*0.9,s*0.5),(s*0.9,s),3)
 
+width_in_tiles = 72*2
+height_in_tiles = 36*2
+width=width_in_tiles * Tile.size
+height=height_in_tiles * Tile.size
 
 screen=pygame.display.set_mode((width, height))
 board = []
 tiles = pygame.sprite.Group()
 first=1
-map=make_map((72,36), blur_size=3, max_value=1, integer=False)
+map=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
 map=islandify(map, 0.25, 5, min_value=-0.25, max_value=1)
-for bleh in range(72):
 num_rivers = goodrand('randint', (5, 1), (6, 2), (7, 3), (8, 2), (9, 1))
 min_river_length = 10
 max_river_length = 70
@@ -83,26 +83,26 @@ for r in range(num_rivers):
 
 for bleh in range(width_in_tiles):
     board.append([])
-    for bluh in range(36):
+    for bluh in range(height_in_tiles):
         dograss=1
         domountains=1
         dotrees=1
         dosheep=1
         dowater=1
         if map[bleh,bluh]<0.25:
-            dowater=15
+            dowater=60
         elif map[bleh,bluh]>0.25 and map[bleh,bluh]<0.5:
-            dograss=10
-        elif map[bleh,bluh]>0.5 and map[bleh,bluh]<0.75:
-            dotrees=10
-        elif map[bleh,bluh]>0.75 and map[bleh,bluh]<1:
-            domountains=10
+            dograss=40
+        elif map[bleh,bluh]>0.5 and map[bleh,bluh]<0.65:
+            dotrees=40
+        elif map[bleh,bluh]>0.65 and map[bleh,bluh]<1:
+            domountains=40
         biome = goodrand('choice',('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))
         new_tile = Tile(tile_coords=(bleh, bluh), biome=biome)
         board[bleh].append(new_tile)
         tiles.add(new_tile)
-yx=randint(1,72)
-yy=randint(1,36)
+yx=randint(1,width_in_tiles)
+yy=randint(1,height_in_tiles)
 cool=0
 class Pathfinder:
     def __init__(self,board,x,y,mex,mey):
@@ -205,8 +205,10 @@ class Team:
         else:
             self.y-=1
     def draw(self):
-        pygame.draw.line(screen,'red',((self.x*20)-50,self.y+50),(((self.x*20)-50)+self.life,self.y+50),3)
-        pygame.draw.circle(screen,self.color,(self.x,self.y),10)
+        x = self.x * Tile.size
+        y = self.y * Tile.size
+        pygame.draw.line(screen,'red',(x-50,y+50),((x-50)+self.life,y+50),3)
+        pygame.draw.circle(screen,self.color,(x,y),10)
 x,y=pygame.mouse.get_pos()
 dude=Team(2,2,'miner',board)
 while True:
