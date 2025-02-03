@@ -69,8 +69,7 @@ board = []
 tiles = pygame.sprite.Group()
 first=1
 map=make_map((72,36), blur_size=3, max_value=1, integer=False)
-toisland=map
-map=islandify(toisland, 0.25, 2)
+map=islandify(map, 0.25, 5, min_value=-0.25, max_value=1)
 for bleh in range(72):
     board.append([])
     for bluh in range(36):
@@ -79,7 +78,7 @@ for bleh in range(72):
         dotrees=1
         dosheep=1
         dowater=1
-        if map[bleh,bluh]>0 and map[bleh,bluh]<0.25:
+        if map[bleh,bluh]<0.25:
             dowater=15
         elif map[bleh,bluh]>0.25 and map[bleh,bluh]<0.5:
             dograss=10
