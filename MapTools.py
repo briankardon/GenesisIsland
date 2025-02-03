@@ -14,6 +14,42 @@ def center_crop(array, new_shape):
     end = start + new_shape
     return array[start[0]:end[0], start[1]:end[1]]
 
+def riverify(map, min_value=0, length=20):
+    idx = np.array(range(map.shape[0]*map.shape[1])).flatten()
+    probs = map.flatten()
+    probs -= probs.min()
+    probs = probs / probs.sum()
+    start_idx = np.random.choice(idx, p=probs)
+    x, y = np.unravel_index(start_idx, map.shape)
+
+    neighbor_offsets = [
+        (0,  -1),
+        (-1, 0),
+        (+1, 0),
+        (0,  +1)
+    ]
+
+    river_coords = [(x, y)]
+    for k in range(length-1):
+        neighbor_heights = []
+        for offset in neighbor_offsets:
+            nx = x + offset[0]
+            ny = y + offset[1]
+            try:
+                neighbor_heights.append((nx, ny, map[nx, ny]))
+            except IndexError:
+                pass
+        x, y, _ = min(neighbor_heights, key=lambda n:n[2])
+        river_coords.append((x, y))
+
+    for x, y in river_coords:
+        map[x, y] = min_value
+    return map
+
+
+
+
+
 def islandify(map, sea_level, sea_width, min_value=None, max_value=None):
     """Alter an existing map to add a sea border around the perimeter
 
@@ -160,5 +196,18 @@ if __name__ == '__main__':
     # Show the island-ified map
     cv2.imshow('map', map3)
     cv2.waitKey(0)
+
+    # River-ify the map
+    map = riverify(map, length=100)
+    # Assign nice colors again
+    map3 = np.zeros(map.shape+(3,), dtype='uint8')
+    map3[:, :, 0] = (map < 150) * map
+    map3[:, :, 1] = (map >= 150) * map
+    map3[:, :, 0] += (map >= 220) * map
+    map3[:, :, 2] += (map >= 220) * map
+        # Show the island-ified map
+    cv2.imshow('map', map3)
+    cv2.waitKey(0)
+
     # Quit
     cv2.destroyAllWindows()

@@ -71,6 +71,17 @@ first=1
 map=make_map((72,36), blur_size=3, max_value=1, integer=False)
 map=islandify(map, 0.25, 5, min_value=-0.25, max_value=1)
 for bleh in range(72):
+num_rivers = goodrand('randint', (5, 1), (6, 2), (7, 3), (8, 2), (9, 1))
+min_river_length = 10
+max_river_length = 70
+mid_river_length = (min_river_length + max_river_length)//2
+river_lengths = np.array(range(min_river_length, max_river_length))
+river_length_probs = (min_river_length + 1 - (((river_lengths-mid_river_length)**2)*min_river_length/(max_river_length-mid_river_length)**2)).astype('int')
+for r in range(num_rivers):
+    length = goodrand('randint', *zip(river_lengths, river_length_probs))
+    map = riverify(map, length=length)
+
+for bleh in range(width_in_tiles):
     board.append([])
     for bluh in range(36):
         dograss=1
