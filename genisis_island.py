@@ -71,9 +71,9 @@ tiles = pygame.sprite.Group()
 first=1
 map=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
 map=islandify(map, 0.25, 5, min_value=-0.25, max_value=1)
-num_rivers = goodrand('randint', (5, 1), (6, 2), (7, 3), (8, 2), (9, 1))
+num_rivers = goodrand('randint', (7, 1), (8, 2), (9, 3), (10, 2), (11, 1))
 min_river_length = 10
-max_river_length = 70
+max_river_length = 100
 mid_river_length = (min_river_length + max_river_length)//2
 river_lengths = np.array(range(min_river_length, max_river_length))
 river_length_probs = (min_river_length + 1 - (((river_lengths-mid_river_length)**2)*min_river_length/(max_river_length-mid_river_length)**2)).astype('int')
