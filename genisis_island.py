@@ -47,7 +47,7 @@ class Adjust:
                     self.num+=1
                     my_font = pygame.font.SysFont('Comic Sans MS', self.image.height/3)
                     text_surface=my_font.render(str(self.num), False, (255, 255, 255))
-class Person:
+class Entity:
     def __init__(self,x,y,board):
         self.x=x
         self.y=y
@@ -289,7 +289,7 @@ class Team:
 x,y=pygame.mouse.get_pos()
 dude=Team(2,2,'miner',board)
 test=Adjust(100,200,0.5,1440,720)
-peeps=[Person((randint(1,72))*20,(randint(1,36))*20,board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board),Person(randint(1,1440),randint(1,720),board)]
+peeps=[Entity((randint(1,72))*20,(randint(1,36))*20,board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board)]
 while True:
     ##try:
     ##    dude.makepath()
