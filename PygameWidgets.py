@@ -475,9 +475,10 @@ class ComboBoxControl(Control, MutableSequence):
                 self.expanded = True
                 self.update_image()
         elif event.type == pygame.MOUSEBUTTONUP:
-            self.expanded = False
-            self.set_value(self.highlight_idx)
-            self.update_image()
+            if self.expanded:
+                self.expanded = False
+                self.set_value(self.highlight_idx)
+                self.update_image()
         elif event.type == pygame.MOUSEMOTION:
             if self.expanded:
                 new_highlight_idx = self.get_hover_idx(event)
@@ -485,7 +486,6 @@ class ComboBoxControl(Control, MutableSequence):
                     if self.highlight_idx != new_highlight_idx:
                         self.highlight_idx = new_highlight_idx
                         self.update_image()
-
 
 class ButtonControl(Control):
     def __init__(self, *args, border_width=3, **kwargs):
