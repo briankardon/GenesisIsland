@@ -11,8 +11,11 @@ def create_rect(position, size, anchor):
     setattr(r, Widget.ANCHOR_KEYWORDS[anchor], position)
     return r
 
+class Root:
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
 
-class Widget(pygame.sprite.Sprite):
+class Widget(Root, pygame.sprite.Sprite):
     ANCHOR_KEYWORDS = {
         'N': 'midtop',
         'NW': 'topleft',
@@ -25,10 +28,19 @@ class Widget(pygame.sprite.Sprite):
         'C': 'center',
     }
 
-    def __init__(self, *args, name='Widget', display_name=None,
-                 position=np.array([0, 0]), size_change_callbacks=[],
-                 anchor='NW', text_color=(255, 255, 255),
-                 background_color=(255, 150, 150), font=None, **kwargs):
+    def __init__(self,
+                *args,
+                name='Widget',
+                display_name=None,
+                position=np.array([0, 0]),
+                size_change_callbacks=None,
+                position_change_callbacks=None,
+                anchor='NW',
+                text_color=(255, 255, 255),
+                background_color=(255, 150, 150),
+                font=None,
+                parent=None,
+                **kwargs):
         """Constructor of abstract base class for pygameW widgets.
 
         Args:
@@ -47,6 +59,7 @@ class Widget(pygame.sprite.Sprite):
         self.image = None
         self.rect = None
         self.name = name
+        self.parent = parent
         if font is None:
             self.font = pygame.font.Font(Path(__file__).parent / "arial.ttf", size=14)
         else:
@@ -56,50 +69,75 @@ class Widget(pygame.sprite.Sprite):
         if anchor not in Widget.ANCHOR_KEYWORDS:
             print('Anchor must be one of:', ', '.join(Widget.ANCHOR_KEYWORDS.keys()))
             raise SyntaxError('Unknown anchor type: ' + anchor)
-        self.anchor = anchor
-        self.display_name = self.name if display_name is None else display_name
-        self.position = np.array(position)
-        self.size_change_callbacks = size_change_callbacks
+        self._anchor = anchor
+        self._display_name = self.name if display_name is None else display_name
+        self._position = np.array(position)
+        if size_change_callbacks is None:
+            self.size_change_callbacks = []
+        else:
+            self.size_change_callbacks = size_change_callbacks
+        if position_change_callbacks is None:
+            self.position_change_callbacks = []
+        else:
+            self.position_change_callbacks = position_change_callbacks
         self.width = None
         self.height = None
         self.t = 0
+
+    def get_position(self):
+        return self._position
+    def set_position(self, new_position):
+        self._position = np.array(new_position)
+    def get_anchor(self):
+        return self._anchor
+    def set_anchor(self, new_anchor):
+        self._anchor = new_anchor
+    def get_display_name(self):
+        return self._display_name
+    def set_display_name(self, new_display_name):
+        self._display_name = np.array(new_display_name)
 
     def update(self):
         self.t += 1
 
     def update_image(self):
-        pass
+        if self.parent is not None:
+            self.parent.child_image_updated(self)
 
     def update_rect(self):
-        anchor_key = Widget.ANCHOR_KEYWORDS[self.anchor]
-        kwargs = {anchor_key: self.position}
+        anchor_key = Widget.ANCHOR_KEYWORDS[self.get_anchor()]
+        kwargs = {anchor_key: self.get_position()}
         self.rect = self.image.get_rect(**kwargs)
-
-    def draw(self, surface):
-        pass
 
     def handle_event(self, event):
         pass
 
     def size_changed(self):
         for size_change_callback in self.size_change_callbacks:
-            size_change_callback()
+            size_change_callback(self)
+    def position_changed(self):
+        for position_change_callback in self.position_change_callbacks:
+            position_change_callback(self)
 
 class Label(Widget):
     def __init__(self, *args, text='', border_width=3, **kwargs):
         super().__init__(*args, **kwargs)
         self.image = None
         self.rect = None
-        self.text = None
+        self._text = None
         self.border_width = border_width
         self.set_text(text)
 
     def set_text(self, text):
-        self.text = text
+        self._text = text
         self.update_image()
+        self.size_changed()
+    def get_text(self):
+        return self._text
 
     def update_image(self):
-        label_surface = self.font.render(self.text, False, self.text_color)
+        super().update_image()
+        label_surface = self.font.render(self.get_text(), False, self.text_color)
         label_width, label_height = label_surface.get_size()
 
         self.width = label_width + 2 * self.border_width
@@ -122,7 +160,6 @@ class Label(Widget):
 
 
 class Control(Widget):
-
     def __init__(self, *args, name='Control', value=None,
                  value_change_callbacks=[], **kwargs):
         """Constructor of abstract base class for pygame control widgets.
@@ -161,45 +198,82 @@ class Control(Widget):
             decrement = self.increment
         self.set_value(self.get_value() - decrement)
 
-
-class ControlGroup(pygame.sprite.Group):
-    def __init__(self, *args, **kwargs):
+class ControlGroup(Root, pygame.sprite.Group):
+    def __init__(self, *args, child_image_update_callbacks=None, **kwargs):
         super().__init__(*args, **kwargs)
+        if child_image_update_callbacks is None:
+            self.child_image_update_callbacks = []
+        else:
+            self.child_image_update_callbacks = child_image_update_callbacks
 
-    def add(self, *controls):
+    def add(self, *controls, **kwargs):
+        super().add(*controls)
         for control in controls:
             if not isinstance(control, Widget):
                 raise TypeError('ControlGroup can only contain Widget objects')
-        super().add(*controls)
+            control.parent = self
+
+    def remove(self, *controls):
+        for control in controls:
+            if control.parent is self:
+                control.parent = None
+        super().remove(*controls)
+
+    def empty(self):
+        for control in self.sprites():
+            if control.parent is self:
+                control.parent = None
+        super().empty()
 
     def handle_event(self, event):
         for control in self:
             control.handle_event(event)
 
+    def child_image_updated(self, child):
+        for child_image_update_callback in self.child_image_update_callbacks:
+            child_image_update_callback(child)
 
-class ControlMenu(ControlGroup):
-    def __init__(self, *args, position=(0, 0), anchor="NW", spacing=10,
-                 style='column', background_color='darkslategray4',
-                 border_radius=5, **kwargs):
+class ControlMenu(ControlGroup, Widget):
+    def __init__(self,
+                *args,
+                spacing=10,
+                style='column',
+                column_alignment='left',
+                row_alignment='top',
+                background_color='darkslategray4',
+                border_radius=5,
+                **kwargs):
         super().__init__(*args, **kwargs)
+        # ControlGroup.__init__(self, *args, **kwargs)
+        # Widget.__init__(self, *args, **kwargs)
         self.spacing = spacing
-        self.position = np.array(position)
-        self.anchor = anchor
-        self.rect = None
         self.style = style
+        self.row_alignment = row_alignment
+        self.column_alignment = column_alignment
         self.background_color = background_color
         self.border_radius = border_radius
-        self.background = pygame.sprite.Sprite()
+        self.background_image = None
+        self.position_change_callbacks.append(lambda _:self.arrange())
+
+    def get_position(self):
+        return self._position
+    def set_position(self, new_position):
+        self._position = np.array(new_position)
+    def get_anchor(self):
+        return self._anchor
+    def set_position(self, new_anchor):
+        self._anchor = np.array(new_anchor)
 
     def draw(self, screen):
-        screen.blit(self.background.image, self.rect)
+        self.update_background_image()
+        screen.blit(self.background_image, self.rect)
         super().draw(screen)
 
     def handle_event(self, *args, **kwargs):
         for sprite in self.sprites():
             sprite.handle_event(*args, **kwargs)
 
-    def arrange(self):
+    def arrange(self, update_background_image=True):
         if len(self.sprites()) == 0:
             return
 
@@ -208,47 +282,91 @@ class ControlMenu(ControlGroup):
             total_height = (sum([control.rect.height for control in self]) +
                             self.spacing * (len(self.sprites()) + 1))
             total_width = max([control.rect.width for control in self]) + self.spacing*2
-            self.rect = create_rect(self.position, (total_width, total_height), self.anchor)
-            position = np.array(self.rect.topleft)
-            x = self.rect.midtop[0]
-            y = position[1] + self.spacing
+            self.rect = create_rect(self.get_position(), (total_width, total_height), self.get_anchor())
+            y = self.rect.midtop[1] + self.spacing
+            if self.column_alignment == 'left':
+                x = self.rect.left
+                anchor = 'NW'
+            elif self.column_alignment == 'center':
+                x = self.rect.centerx
+                anchor = 'N'
+            elif self.column_alignment == 'right':
+                x = self.rect.right
+                anchor = 'NE'
             for control in self.sprites():
-                control.anchor = 'N'
-                control.position = (x, y)
+                control.set_anchor(anchor)
+                control.set_position((x, y))
                 control.update_rect()
                 y += control.rect.height + self.spacing
+        elif self.style == 'row':
+            # Determine total width
+            total_width = (sum([control.rect.width for control in self]) +
+                            self.spacing * (len(self.sprites()) + 1))
+            total_height = max([control.rect.width for control in self]) + self.spacing*2
+            self.rect = create_rect(self.get_position(), (total_width, total_height), self.get_anchor())
+
+            x = self.rect.left + self.spacing
+            if self.row_alignment == 'top':
+                y = self.rect.top
+                anchor = 'NW'
+            elif self.row_alignment == 'center':
+                y = self.rect.centery
+                anchor = 'W'
+            elif self.row_alignment == 'bottom':
+                y = self.rect.bottom
+                anchor = 'SW'
+            for control in self.sprites():
+                control.set_anchor(anchor)
+                control.set_position((x, y))
+                control.update_rect()
+                x += control.rect.width + self.spacing
         else:
             raise TypeError('Unknown arrange style ' + self.style)
 
-        self.background.image = pygame.Surface(self.rect.size)
-        self.background.image.set_colorkey('black')
+        if update_background_image:
+            self.update_background_image()
+
+    def update_background_image(self):
+        if self.rect is None:
+            self.arrange()
+        if self.background_image is None:
+            self.background_image = pygame.Surface(self.rect.size)
+        self.background_image.set_colorkey('black')
         rect = self.rect.copy()
         rect.topleft = (0, 0)
         pygame.draw.rect(
-            self.background.image,
+            self.background_image,
             self.background_color,
             rect,
             border_radius=self.border_radius
         )
 
-
-    def add(self, *sprites, **kwargs):
+    def add(self, *sprites, rearrange=False, **kwargs):
         # Request notification when sprite changes size
         for sprite in sprites:
             if not self.has(sprite):
-                sprite.size_change_callbacks.append(self.arrange)
+                sprite.size_change_callbacks.append(lambda source:self.arrange())
         super().add(*sprites, **kwargs)
-        # Update arrangement
-        self.arrange()
+        if rearrange:
+            # Update arrangement
+            self.arrange()
+
+    def position_changed(self):
+        for position_change_callback in self.position_change_callbacks:
+            position_change_callback(self)
 
 class TextBoxControl(Control):
-    def __init__(self, *args, value='', border_width=3, **kwargs):
+    def __init__(self, *args, value='', border_width=3, resizable=False,
+                    min_size=50, max_size=100, **kwargs):
         super().__init__(*args, **kwargs)
         self.border_width = border_width
         self.characters = []
         self.set_value(value, fire_callback=False, update_image=False)
         self.image = None
         self.rect = None
+        self.resizable = resizable
+        self.min_size = min_size
+        self.max_size = max_size
         self.cursor_idx = None
         self.cursor_hitboxes = []
         self.cursor_blink_period = 10  # In game ticks
@@ -264,13 +382,26 @@ class TextBoxControl(Control):
             self.fire_callbacks()
 
     def update_image(self):
+        super().update_image()
+        original_width = self.width
+        original_height = self.height
+
         string = self.get_value()
 
         label_surface = self.font.render(string, False, self.text_color)
         label_width, label_height = label_surface.get_size()
-        self.width = label_width + 2 * self.border_width
-        self.height = label_height + 2 * self.border_width
+        if self.resizable:
+            self.width = max(self.min_size, label_width + 2 * self.border_width)
+            self.height = label_height + 2 * self.border_width
+        else:
+            self.width = self.max_size
+            self.height = label_height + 2 * self.border_width
         self.image = pygame.Surface((self.width, self.height))
+        label_rect = create_rect(
+            (self.width/2, self.height/2),
+            (label_width, label_height),
+            'C'
+        )
 
         self.image.fill((0, 0, 0))
         pygame.draw.rect(
@@ -281,37 +412,48 @@ class TextBoxControl(Control):
             border_radius=0
         )
 
-        # Update cursor hitboxes
-        self.cursor_hitboxes = []
+        # Determine each cursor position based on text size, relative to the
+        #   middle of the text box
         cursor_position = [None for k in range(len(string)+1)]
         for k in range(len(string)+1):
             cursor_position[k], cursor_height = self.font.size(string[:k])
-            cursor_position[k] += self.border_width
+        for k in range(len(string)+1):
+            cursor_position[k] += self.width/2 - cursor_position[-1]/2
+        # Update cursor hitboxes
+        self.cursor_hitboxes = []
         # Establish first hitbox
         self.cursor_hitboxes = [None for k in range(len(string)+1)]
-        self.cursor_hitboxes[0] = create_rect(
-            (0, 0),
-            (cursor_position[1]/2, self.height),
-            'NW'
-        )
-        for k in range(1, len(string)):
-            last_position = cursor_position[k-1]
-            this_position = cursor_position[k]
-            next_position = cursor_position[k+1]
-            left =  np.mean([last_position, this_position])
-            right = np.mean([this_position, next_position])
-            self.cursor_hitboxes[k] = create_rect(
-                (left, 0),
-                (right-left, self.height),
+        if len(cursor_position) > 1:
+            self.cursor_hitboxes[0] = create_rect(
+                (0, 0),
+                (cursor_position[1]/2, self.height),
                 'NW'
             )
-        # Establish last hitbox
-        start = np.mean(cursor_position[-2:])
-        self.cursor_hitboxes[len(string)] = create_rect(
-            (start, 0),
-            (self.width - start, self.height),
-            'NW'
-        )
+            for k in range(1, len(string)):
+                last_position = cursor_position[k-1]
+                this_position = cursor_position[k]
+                next_position = cursor_position[k+1]
+                left =  np.mean([last_position, this_position])
+                right = np.mean([this_position, next_position])
+                self.cursor_hitboxes[k] = create_rect(
+                    (left, 0),
+                    (right-left, self.height),
+                    'NW'
+                )
+            # Establish last hitbox
+            start = np.mean(cursor_position[-2:])
+            self.cursor_hitboxes[len(string)] = create_rect(
+                (start, 0),
+                (self.width - start, self.height),
+                'NW'
+            )
+        else:
+            # String is empty
+            self.cursor_hitboxes[0] = create_rect(
+                (0, 0),
+                (self.width, self.height),
+                'NW'
+            )
 
         if self.cursor_idx is not None:
             pygame.draw.line(
@@ -322,10 +464,13 @@ class TextBoxControl(Control):
                 width=1
             )
 
-        self.image.blit(label_surface, (self.border_width, self.border_width))
+        self.image.blit(label_surface, label_rect)
         self.image.set_colorkey((0, 0, 0))
 
         self.update_rect()
+
+        if self.width != original_width or self.height != original_height:
+            self.size_changed()
 
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONDOWN:
@@ -362,7 +507,9 @@ class TextBoxControl(Control):
                     self.cursor_idx -= 1
                     self.update_image()
 
-class ComboBoxControl(Control, MutableSequence):
+class ChoiceControl(Control, MutableSequence):
+    # Abstract base class for controls where the user selects one of
+    #   multiple values
     def __init__(self, *args, border_width=3, display_names=[], data=[],
                     text_alignment='center', **kwargs):
         super().__init__(*args, **kwargs)
@@ -380,16 +527,7 @@ class ComboBoxControl(Control, MutableSequence):
             raise ValueError('Display names must be strings')
         self.display_names = display_names
         self.data = data
-        self.text_alignment = text_alignment  # 'left', 'right', or 'center'
-        self.border_width = border_width
-        self.expanded = False
-        self.highlight_idx = None
         self.set_value(0, fire_callback=False)
-        self.image = None
-        self.rect = None
-        self.element_rects = []
-        self.element_images = []
-        self.update_image()
 
     def __getitem__(self, idx):
         return (self.display_names[idx], self.data[idx])
@@ -428,7 +566,22 @@ class ComboBoxControl(Control, MutableSequence):
             self.display_names.insert(idx, value)
             self.data.insert(idx, None)
 
+class ComboBoxControl(ChoiceControl):
+    def __init__(self, *args, border_width=3, text_alignment='center',
+                    **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text_alignment = text_alignment  # 'left', 'right', or 'center'
+        self.border_width = border_width
+        self.expanded = False
+        self.highlight_idx = None
+        self.image = None
+        self.rect = None
+        self.element_rects = []
+        self.element_images = []
+        self.update_image()
+
     def update_image(self):
+        super().update_image()
         original_width = self.width
         original_height = self.height
 
@@ -488,6 +641,7 @@ class ComboBoxControl(Control, MutableSequence):
             width=1,
             border_radius=3
         )
+
         main_image.blit(label_surfaces[self.get_value()], label_rects[self.get_value()])
 
         if self.image is None or self.image.size[0] != self.width or self.image.size[1] != self.height:
@@ -546,6 +700,7 @@ class ComboBoxControl(Control, MutableSequence):
         if event.type == pygame.MOUSEBUTTONDOWN:
             if self.rect.collidepoint(event.pos):
                 self.expanded = True
+                self.highlight_idx = self.get_value()
                 self.update_image()
         elif event.type == pygame.MOUSEBUTTONUP:
             if self.expanded:
@@ -570,7 +725,8 @@ class ButtonControl(Control):
         self.update_image()
 
     def update_image(self):
-        label_surface = self.font.render(self.display_name, False, self.text_color)
+        super().update_image()
+        label_surface = self.font.render(self._display_name, False, self.text_color)
         label_width, label_height = label_surface.get_size()
         self.width = label_width + 2 * self.border_width
         self.height = label_height + 2 * self.border_width
@@ -604,13 +760,67 @@ class ButtonControl(Control):
                 self.set_value(False)
                 self.update_image()
 
+class RadioButtonControl(ChoiceControl):
+    def __init__(self, *args, border_width=3, text_alignment='center',
+                    **kwargs):
+        super().__init__(*args, **kwargs)
+        self.text_alignment = text_alignment  # 'left', 'right', or 'center'
+        self.border_width = border_width
+        self.group = ControlMenu(
+            style='column',
+            column_alignment='right',
+            child_image_update_callbacks=[lambda child:self.update_image()]
+        )
+        self.rect = None
+        self.update_image()
+
+    def update_image(self):
+        super().update_image()
+        original_width = self.width
+        original_height = self.height
+
+        self.group.empty()
+        for k, (display_name, data) in enumerate(self):
+            value = (k == 0)
+            self.group.add(
+                CheckBoxControl(
+                    name=display_name,
+                    value=value
+                )
+            )
+
+        self.group.arrange()
+        self.group.update_background_image()
+
+        self.image = self.group.background_image
+        self.group.draw(self.image)
+        self.rect = self.group.rect
+
+    def draw(self, screen):
+        self.group.draw(screen)
+
+    def handle_event(self, event):
+        try:
+            # If it's a mouse event with a "pos" attribute, adjust event
+            #   position relative to corner
+            x, y = event.pos
+            x -= self.rect.left
+            y -= self.rect.top
+            event.pos = (x, y)
+        except AttributeError:
+            # Guess it's some other event
+            pass
+        self.group.handle_event(event)
+
 class CheckBoxControl(ButtonControl):
     def __init__(self, *args, value=False, **kwargs):
         super().__init__(*args, **kwargs)
         self.set_value(value, fire_callback=False)
+        self.update_image()
 
     def update_image(self):
-        label_surface = self.font.render(self.display_name, False, self.text_color)
+        super().update_image()
+        label_surface = self.font.render(self._display_name, False, self.text_color)
         label_width, label_height = label_surface.get_size()
         check_size = label_height
         self.width = label_width + 3 * self.border_width + check_size
@@ -647,7 +857,7 @@ class CheckBoxControl(ButtonControl):
     def handle_event(self, event):
         if event.type == pygame.MOUSEBUTTONUP:
             if self.rect.collidepoint(event.pos):
-                self.set_value(not self.value)
+                self.set_value(not self.get_value())
                 self.update_image()
 
 class NumericControl(Control):
@@ -723,7 +933,8 @@ class IncrementControl(NumericControl):
                 self.update_image()
 
     def update_image(self):
-        name_surface = self.font.render(self.display_name, False, self.text_color)
+        super().update_image()
+        name_surface = self.font.render(self._display_name, False, self.text_color)
         name_width, name_height = name_surface.get_size()
 
         value_string = self.number_format.format(self.get_value())
@@ -884,7 +1095,8 @@ class SliderControl(NumericControl):
         self.current_height += delta
 
     def update_image(self):
-        name_surface = self.font.render(self.display_name, False, self.text_color)
+        super().update_image()
+        name_surface = self.font.render(self._display_name, False, self.text_color)
         name_width, name_height = name_surface.get_size()
 
         value_string = self.number_format.format(self.value)
@@ -948,7 +1160,6 @@ class SliderControl(NumericControl):
         self.image.set_colorkey((0, 0, 0))
         self.update_rect()
 
-
 if __name__ == '__main__':
     import sys
 
@@ -959,20 +1170,28 @@ if __name__ == '__main__':
     h = 600
 
     label = Label(text="A label!")
+
     button = ButtonControl(name="Button")
+    button2 = ButtonControl(name=": )")
     incremental = IncrementControl(name="Incremental", orientation='horizontal')
     slider = SliderControl(name="Slider", min=0, max=10, value=5)
     combo = ComboBoxControl(name="Combo", display_names=['hi', 'yay', 'developmental', 'woot'])
-    text = TextBoxControl(name="Text", value='hello')
+    text1 = TextBoxControl(name="Text", value='hello', resizable=True)
+    text2 = TextBoxControl(name="Text", value='hello2', resizable=False)
     check = CheckBoxControl(name="Check", value=False)
-    menu = ControlMenu(position=(w / 2, h / 2), anchor='C')
+    radio = RadioButtonControl(name="Radio", display_names=["One", "Two", "Whee"])
+    menu = ControlMenu(position=(w / 2, h / 2), anchor='C', style='row', row_alignment='center')
     menu.add(label)
     menu.add(button)
+    menu.add(button2)
     menu.add(incremental)
     menu.add(slider)
     menu.add(combo)
-    menu.add(text)
+    menu.add(text1)
+    menu.add(text2)
     menu.add(check)
+    menu.add(radio)
+    menu.arrange()
 
     screen = pygame.display.set_mode((w, h))
 
@@ -987,7 +1206,7 @@ if __name__ == '__main__':
                         pygame.quit()
                         return
                     elif event.key == pygame.K_a:
-                        pass
+                        label.set_text('it changed')
                 menu.handle_event(event)
 
             menu.update()

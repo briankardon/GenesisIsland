@@ -312,7 +312,7 @@ while True:
     space=0
     label = Label(text="Menu")
     slider = SliderControl(name="Speed", min=0, max=10, value=5)
-    menu = ControlMenu(position=(width / 2, height / 2), anchor='C')
+    menu = ControlMenu(position=(width / 2, height / 2), anchor='C', column_alignment='center')
     button = ButtonControl(name="Reset")
     exit = ButtonControl(name="Exit")
     menu.add(label)
