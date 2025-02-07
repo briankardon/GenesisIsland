@@ -9,6 +9,17 @@ pygame.init()
 Clock=pygame.time.Clock()
 import time
 while True:
+    my_font = pygame.font.SysFont('Comic Sans MS', 50)
+    width=1440
+    height=720
+    screen=pygame.display.set_mode((width, height))
+    screen.fill('blue')
+    for event in pygame.event.get():
+        pass
+    text_surface=my_font.render('loading...', False, (255, 255, 255))
+    screen.blit(text_surface, (470,335))
+    pygame.display.flip()
+    Clock=pygame.time.Clock()
     def goodrand(which,*args):
         ret=[]
         for bleh in range(len(args)):
@@ -54,6 +65,7 @@ while True:
             self.resources=[]
             self.y=y
             self.speed=1
+            self.life=100
             self.board=board
             self.cooldown=0
             self.gox=self.x-int(choice(['20','-20']))
@@ -97,8 +109,11 @@ while True:
             return kill
         def draw(self,surface):
             pygame.draw.circle(surface,'black',(self.x,self.y),5)
+            pygame.draw.line(surface,'red',(self.x-25,self.y+10),((self.x-25)+(self.life/2),self.y+10),2)
         def harvest(self):
-            pass
+            for bleh in range(len(self.board.resources)):
+                self.resources.append(self.board.resources[bleh])
+            return self.board
     class Controls:
         def menu(font,backgroundcolor,title,screen,*options):
             screen.fill(backgroundcolor)
@@ -161,7 +176,6 @@ while True:
     width=width_in_tiles * Tile.size
     height=height_in_tiles * Tile.size
 
-    screen=pygame.display.set_mode((width, height))
     board = []
     tiles = pygame.sprite.Group()
     first=1
@@ -176,7 +190,6 @@ while True:
     for r in range(30):
         length = goodrand('randint', *zip(river_lengths, river_length_probs))
         map = riverify(map, length=100)
-
     for bleh in range(width_in_tiles):
         board.append([])
         for bluh in range(height_in_tiles):
@@ -340,7 +353,8 @@ while True:
                 elif event.key==pygame.K_SPACE and space==0:
                     space=1
             if event.type==pygame.MOUSEBUTTONDOWN:
-                pass
+                if space==0:
+                    peeps.append(Entity(x,y,board))
                 ##dude=Pathfinder(board,x,y,yx,yy)
             menu.handle_event(event)
         key=pygame.key.get_pressed()
