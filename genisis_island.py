@@ -311,13 +311,17 @@ while True:
     peeps=[Entity((randint(1,72))*20,(randint(1,36))*20,board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board)]
     space=0
     label = Label(text="Menu")
-    slider = SliderControl(name="Speed", min=0, max=10, value=5)
+    slider = SliderControl(name="Speed", min=3, max=10, value=5)
     menu = ControlMenu(position=(width / 2, height / 2), anchor='C', column_alignment='center')
     button = ButtonControl(name="Reset")
     exit = ButtonControl(name="Exit")
+    do='''The population is
+           {x}'''
+    population = Label(text=do.format(x=str(len(peeps))))
     menu.add(label)
     menu.add(slider)
     menu.add(button)
+    menu.add(population)
     menu.add(exit)
     #test=Adjust(720,360,0.5,100,300,start=0,color='white')
     while True:
@@ -371,6 +375,7 @@ while True:
             if space==1:
                 pygame.quit()
                 sys.exit()
+        population.set_text(do.format(x=str(len(peeps))))
         if space==1:
             menu.update()
             menu.draw(screen)
