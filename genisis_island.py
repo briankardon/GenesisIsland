@@ -51,6 +51,7 @@ while True:
     class Entity:
         def __init__(self,x,y,board):
             self.x=x
+            self.resources=[]
             self.y=y
             self.speed=1
             self.board=board
@@ -96,6 +97,8 @@ while True:
             return kill
         def draw(self,surface):
             pygame.draw.circle(surface,'black',(self.x,self.y),5)
+        def harvest(self):
+            pass
     class Controls:
         def menu(font,backgroundcolor,title,screen,*options):
             screen.fill(backgroundcolor)
@@ -114,11 +117,11 @@ while True:
             return None
     class Tile(pygame.sprite.Sprite):
         size=10
-        def __init__(self, *args, tile_coords=(0, 0), biome='plains', grass_color=None, **kwargs):
+        def __init__(self, *args, tile_coords=(0, 0), resources=[],biome='plains', grass_color=None, **kwargs):
             super().__init__(*args, **kwargs)
             self.biome = biome
             self.entities = []
-            self.resources = []
+            self.resources = resources
             self.image = None
             if grass_color is None:
                 self.grass_color=randint(150,230)
