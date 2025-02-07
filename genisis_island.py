@@ -63,13 +63,20 @@ while True:
             if self.cooldown==2:
                 self.cooldown=0
                 kill=True
-                for k in range(1000):
-                    self.gox=self.x-int(choice(['20','-20']))
-                    self.goy=self.y-int(choice(['20','-20']))
+                choicegox=['20','-20']
+                choicegoy=['20','-20']
+                for k in range(len(choicegoy)):
+                    move=randint(0,(len(choicegox)-1))
+                    movey=randint(0,(len(choicegoy)-1))
+                    self.gox=self.x-int(choicegox[move])
+                    self.goy=self.y-int(choicegoy[movey])
+                    choicegox.pop(move)
+                    choicegoy.pop(movey)
                     try:
-                        if self.gox==int(self.gox) and (self.gox/10)<len(self.board) and self.goy==int(self.goy) and (self.goy/10)<len(self.board[0]) and board[round(self.x/10)][int(self.goy/10)].biome!='water' and board[int(self.gox/10)][int(self.y/10)].biome!='water':
-                            kill=False
-                            break
+                        if self.gox==int(self.gox) and (self.gox/10)<len(self.board) and self.goy==int(self.goy) and (self.goy/10)<len(self.board[0]) and (board[round(self.gox/10)][round(self.goy/10)].biome!='water'):
+                            if self.board[round(self.x/10)][round(self.y/10)].biome!='water':
+                                kill=False
+                                break
                     except IndexError:
                         pass
                 self.moving=True
@@ -347,17 +354,20 @@ while True:
                 if peeps[bleh].move():
                     pop.append(bleh)
             peeps[bleh].draw(screen)
-            peeps[bleh].speed=round((round(slider.get_value()/2)*2)/5)
+            if space==1:
+                peeps[bleh].speed=round((round(slider.get_value()/2)*2)/5)
         for bleh in range(len(pop)):
             try:
                 peeps.pop(pop[bleh])
             except IndexError:
                 pass
         if button.get_value():
-            break
+            if space==1:
+                break
         if exit.get_value():
-            pygame.quit()
-            sys.exit()
+            if space==1:
+                pygame.quit()
+                sys.exit()
         if space==1:
             menu.update()
             menu.draw(screen)
