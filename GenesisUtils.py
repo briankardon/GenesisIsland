@@ -26,12 +26,7 @@ def goodrand(which,*args):
 def is_legal_move(board,x,y,node='tile',tile_side=10):
     try:
         if node=='tile':
-            if board[x-1][y-1].biome=='water':
-                return False
-            else:
-                return True
-        else:
-            if board[(x)/tile_side][(y)/tile_side].biome=='water':
+            if board[x][y].biome=='water':
                 return False
             else:
                 return True
