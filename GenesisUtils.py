@@ -35,11 +35,12 @@ def is_legal_move(board,x,y,node='tile',tile_side=10):
 
 ###class building:
 ###    def __init__
-class Entity:
-    def __init__(self,x,y,board):
+class Entity(pygame.sprite.Sprite):
+    def __init__(self,x,y,board, *args, **kwargs):
+        super().__init__(*args, **kwargs)
         self.x=x
-        self.resources=[]
         self.y=y
+        self.resources=[]
         self.speed=0.05
         self.life=100
         self.board=board
@@ -47,6 +48,30 @@ class Entity:
         self.gox=self.x
         self.goy=self.y
         self.moving=False
+        self.image = None
+        self.rect = None
+        self.update_image()
+        self.update_rect()
+
+    def update_image(self):
+        self.image = pygame.Surface((Tile.size, Tile.size), pygame.SRCALPHA)
+        self.image.fill((0, 0, 0, 0))
+        pygame.draw.circle(
+            self.image,
+            'black',
+            (Tile.size/2, Tile.size/2),
+            Tile.size/2
+        )
+        pygame.draw.line(
+            self.image,
+            'red',
+            (0, Tile.size/2),
+            (Tile.size * self.life/100, Tile.size/2),
+            round(2*Tile.size/10)
+        )
+    def update_rect(self):
+        self.rect = pygame.Rect(*tile2Screen(self.x, self.y), Tile.size, Tile.size)
+
     def move(self):
         kill=False
         if not self.moving:
@@ -65,6 +90,7 @@ class Entity:
         return kill
 
     def update(self):
+        x0, y0 = self.x, self.y
         if self.x < self.gox:
             self.x += self.speed
         elif self.x > self.gox:
@@ -78,13 +104,9 @@ class Entity:
             self.x = self.gox
             self.y = self.goy
             self.moving = False
+        if x0 != self.x or y0 != self.y:
+            self.update_rect()
 
-    def draw(self, surface):
-        pygame.draw.circle(surface,'black',tile2Screen(self.x, self.y), Tile.size/2)
-        life_length = self.life / (4*Tile.size)
-        health_x0, health_y0 = tile2Screen(self.x - 1.25, self.y + 1)
-        health_x1, health_y1 = tile2Screen(self.x - 1.25 + life_length, self.y + 1)
-        pygame.draw.line(surface,'red',(health_x0, health_y0),(health_x1,health_y1),2)
     def harvest(self,tile='sheep'):
         try:
             if self.board[round(self.x/10)][round(self.y/10)].biome==tile:
@@ -95,6 +117,7 @@ class Entity:
         except IndexError:
             pass
         return self.board
+
     def update_land(self,board):
         self.board=board
 class Adjust:
