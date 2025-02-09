@@ -15,10 +15,26 @@ def center_crop(array, new_shape):
     return array[start[0]:end[0], start[1]:end[1]]
 
 def riverify(map, min_value=0, length=20):
+    """Add a river to a map.
+
+    Args:
+        map (2D numpy ndarray): Initial height map.
+        min_value (float): Value to drop river bottoms to. Defaults to 0.
+        length (int): Length of the river. Defaults to 20.
+
+    Returns:
+        2D numpy array: Modified height map.
+
+    """
+    # Choose start location:
+    # Get a list of all flattened pixel indices
     idx = np.array(range(map.shape[0]*map.shape[1])).flatten()
+    # Get a list of probability weights corresponding to the map height
     probs = map.flatten()
+    # Normalize probabilities
     probs -= probs.min()
     probs = probs / probs.sum()
+    # Choose a river start location, with higher elevations being more likely
     start_idx = np.random.choice(idx, p=probs)
     x, y = np.unravel_index(start_idx, map.shape)
 
