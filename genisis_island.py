@@ -20,12 +20,13 @@ def is_legal_move(board,x,y,node='tile',tile_side=10):
                 return True
     except IndexError:
         return False
-while True:
-    my_font = pygame.font.SysFont('Comic Sans MS', 50)
-    width=1440
-    height=720
-    screen=pygame.display.set_mode((width, height))
 
+my_font = pygame.font.SysFont('Comic Sans MS', 50)
+width=1440
+height=720
+screen=pygame.display.set_mode((width, height))
+
+while True:
     # Display loading screen
     screen.fill('blue')
     for event in pygame.event.get():

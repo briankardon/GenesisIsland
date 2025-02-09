@@ -108,12 +108,21 @@ def create_board(width_in_tiles, height_in_tiles):
 
 class Tile(pygame.sprite.Sprite):
     size=10
-    def __init__(self, *args, tile_coords=(0, 0), resources=[],biome='plains', grass_color=None, **kwargs):
+    def __init__(
+            self,
+            *args,
+            tile_coords=(0, 0),
+            height=0,
+            resources=[],
+            biome='plains',
+            grass_color=None,
+            **kwargs):
         super().__init__(*args, **kwargs)
         self.biome = biome
         self.entities = []
         self.resources = resources
         self.image = None
+        self.height = height
         if grass_color is None:
             self.grass_color=randint(150,230)
         else:
