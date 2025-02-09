@@ -132,6 +132,7 @@ class Label(Widget):
         self._text = text
         self.update_image()
         self.size_changed()
+
     def get_text(self):
         return self._text
 
