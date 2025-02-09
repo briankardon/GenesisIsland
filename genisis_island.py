@@ -89,7 +89,6 @@ while True:
         key=pygame.key.get_pressed()
 
         tiles.draw(screen)
-
         now=zoom_slider.get_value()
         if now!=last:
             if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]:
