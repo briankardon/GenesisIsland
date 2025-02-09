@@ -15,6 +15,101 @@ def goodrand(which,*args):
     elif which=='choice':
         return do
 
+def is_legal_move(board,x,y,node='tile',tile_side=10):
+    try:
+        if node=='tile':
+            if board[x-1][y-1].biome=='water':
+                return False
+            else:
+                return True
+        else:
+            if board[(x)/tile_side][(y)/tile_side].biome=='water':
+                return False
+            else:
+                return True
+    except IndexError:
+        return False
+
+###class building:
+###    def __init__
+class Entity:
+    def __init__(self,x,y,board):
+        self.x=x
+        self.resources=[]
+        self.y=y
+        self.speed=1
+        self.life=100
+        self.first=1
+        self.board=board
+        self.cooldown=1
+        self.gox=self.x
+        self.goy=self.y
+        self.moving=False
+    def move(self):
+        kill=False
+        if self.cooldown==2:
+            self.cooldown=0
+            kill=25
+            choicegox=['1','0','-1']
+            choicegoy=['1','0','-1']
+            for k in range(2):
+                move=randint(0,(len(choicegox)-1))
+                movey=randint(0,(len(choicegoy)-1))
+                if choicegoy==['1','-1']:
+                    move=1
+                if choicegox==['1','-1']:
+                    movey=1
+                self.gox=self.x-int(choicegox[move])
+                self.goy=self.y-int(choicegoy[movey])
+                choicegox.pop(move)
+                choicegoy.pop(movey)
+                if self.first==0:
+                    if is_legal_move(board,self.gox,self.goy):
+                        if self.board[round(self.x/10)][round(self.y/10)].biome!='water':
+                            kill=False
+                            break
+            self.moving=True
+        if first==0:
+            if self.board[round(self.x/10)][round(self.y/10)].biome=='trees':
+                pass
+                ##moveability=-((self.speed/4)/3)
+            elif self.board[round(self.x/10)][round(self.y/10)].biome=='mounains':
+                pass
+                ##moveability=-(self.speed/2)
+            else:
+                pass
+        moveability=0
+        self.first=0
+        if self.x<self.gox:
+            self.x+=(self.speed)/10
+        elif self.x>self.gox:
+            self.x-=(self.speed)/10
+        if self.y<self.goy:
+            self.y+=(self.speed)/10
+        elif self.y>self.goy:
+            self.y-=(self.speed)/10
+        if self.x==self.gox and self.y==self.goy:
+            self.moving=False
+            self.cooldown=1
+        if self.cooldown>0:
+            self.cooldown+=1
+        return kill
+    def draw(self,surface):
+        pygame.draw.circle(surface,'black',((self.x*10),(self.y*10)),5)
+        pygame.draw.line(surface,'red',((self.x*10)-12.5,(self.y*10)+10),(((self.x*10)-12.5)+(((self.life/4)/10)*10),(self.y*10)+10),2)
+    def harvest(self,tile='sheep'):
+        try:
+            if self.board[round(self.x/10)][round(self.y/10)].biome==tile:
+                for bleh in range(len(self.board[round(self.x/10)][round(self.y/10)].resources)):
+                    ####self.resources.append(self.board.resources[bleh])
+                    ####self.board.resources=[]
+                    pass
+        except IndexError:
+            pass
+        return self.board
+    def update_land(self,board):
+        self.board=board
+
 class Adjust:
     def __init__(self,x,y,node,width,height,start=0,color='white'):
         self.x=x
