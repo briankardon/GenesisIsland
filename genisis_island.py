@@ -6,13 +6,12 @@ from random import randint, choice
 
 pygame.init()
 Clock=pygame.time.Clock()
+my_font = pygame.font.SysFont('Comic Sans MS', 50)
+width=1440
+height=720
+screen=pygame.display.set_mode((width, height))
 
 while True:
-    my_font = pygame.font.SysFont('Comic Sans MS', 50)
-    width=1440
-    height=720
-    screen=pygame.display.set_mode((width, height))
-
     # Display loading screen
     screen.fill('blue')
     for event in pygame.event.get():
