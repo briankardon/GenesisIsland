@@ -254,17 +254,18 @@ class Tile(pygame.sprite.Sprite):
         else:
             # Draw grass background
             self.image.fill([0, self.grass_color, 0])
+            
         if self.biome == 'mountains':
             pygame.draw.polygon(self.image, 'gray', ((0, s), (s*0.5,0),(s,s),(0,s)))
-        if self.biome == 'trees':
+        elif self.biome == 'trees':
             pygame.draw.line(self.image,'brown',(s*0.5,s*0.5),(s*0.5,s),5)
             pygame.draw.rect(self.image,[0,100,0],(0,0,s,s*0.5))
-        if self.biome == 'sheep':
+        elif self.biome == 'sheep':
             pygame.draw.rect(self.image,'white',(s*0.25,0,s*3*0.25,s*0.5))
             pygame.draw.rect(self.image,'black',(0,0,s*0.25,s*0.25))
             pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
             pygame.draw.line(self.image,'black',(s*0.9,s*0.5),(s*0.9,s),3)
-        if self.biome == 'desert':
+        elif self.biome == 'desert':
             pygame.draw.rect(self.image,[240, 202, 79],(0,0,s,s))
             pygame.draw.line(self.image,[35, 156, 11],(s/2,s),(s/2,s/8),1)
             pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),(0,s/2),1)
