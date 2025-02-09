@@ -103,10 +103,17 @@ while True:
                 if event.key==pygame.K_SPACE:
                     paused = not paused
                     population.set_text(do.format(x=str(len(peeps))))
-            if event.type==pygame.MOUSEBUTTONDOWN:
+            elif event.type==pygame.MOUSEWHEEL:
+                old_x_tile, old_y_tile = screen2Tile(x, y)
+                Tile.size += event.y
+                new_x_screen, new_y_screen = tile2Screen(old_x_tile, old_y_tile)
+                Tile.x0 += (new_x_screen - x)
+                Tile.y0 += (new_y_screen - y)
+            elif event.type==pygame.MOUSEBUTTONDOWN:
                 if not paused:
-                    x_tile, y_tile = screen2Tile(x, y)
-                    peeps.append(Entity(int(x_tile), int(y_tile), board))
+                    if event.button == 1:
+                        x_tile, y_tile = screen2Tile(x, y)
+                        peeps.append(Entity(int(x_tile), int(y_tile), board))
             menu.handle_event(event)
 
         key=pygame.key.get_pressed()

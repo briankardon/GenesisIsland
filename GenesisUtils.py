@@ -3,9 +3,14 @@ from MapTools import *
 from random import randint, choice
 import numpy as np
 
-def screen2Tile(x, y):
-    return x / Tile.size, y / Tile.size
-
+def screen2Tile(x_screen, y_screen):
+    x_tile = (x_screen + Tile.x0) / Tile.size
+    y_tile = (y_screen + Tile.y0) / Tile.size
+    return x_tile, y_tile
+def tile2Screen(x_tile, y_tile):
+    x_screen = x_tile * Tile.size - Tile.x0
+    y_screen = y_tile * Tile.size - Tile.y0
+    return x_screen, y_screen
 
 def goodrand(which,*args):
     ret=[]
@@ -79,12 +84,11 @@ class Entity:
             self.y = self.goy
             self.moving = False
 
-    def draw(self,surface):
-        pygame.draw.circle(surface,'black',((self.x * Tile.size),(self.y * Tile.size)), Tile.size/2)
-        health_x0 = self.x * Tile.size - 12.5
-        health_y0 = self.y * Tile.size + 10
-        health_x1 = health_x0 + self.life/4
-        health_y1 = self.y*Tile.size + 10
+    def draw(self, surface):
+        pygame.draw.circle(surface,'black',tile2Screen(self.x, self.y), Tile.size/2)
+        life_length = self.life / (4*Tile.size)
+        health_x0, health_y0 = tile2Screen(self.x - 1.25, self.y + 1)
+        health_x1, health_y1 = tile2Screen(self.x - 1.25 + life_length, self.y + 1)
         pygame.draw.line(surface,'red',(health_x0, health_y0),(health_x1,health_y1),2)
     def harvest(self,tile='sheep'):
         try:
@@ -194,6 +198,8 @@ def create_board(width_in_tiles, height_in_tiles):
 
 class Tile(pygame.sprite.Sprite):
     size=10
+    x0=0
+    y0=0
     def __init__(
             self,
             *args,
@@ -218,8 +224,7 @@ class Tile(pygame.sprite.Sprite):
         self.update_rect()
 
     def update_rect(self):
-        tile_coords = [*self.tile_coords, 1, 1]
-        coords = [coord * Tile.size for coord in tile_coords]
+        coords = [*tile2Screen(*self.tile_coords), Tile.size, Tile.size]
         self.rect = pygame.Rect(*coords)
 
     def update_image(self):
