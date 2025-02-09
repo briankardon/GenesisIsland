@@ -18,7 +18,7 @@ exit = False
 
 def speed_changed_callback(new_speed):
     for peep in peeps:
-        peep.speed = new_speed
+        peep.speed = (new_speed)/50
 def reset_button_callback(new_reset):
     global reset
     reset = new_reset

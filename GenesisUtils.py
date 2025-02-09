@@ -98,8 +98,6 @@ class Entity:
         return self.board
     def update_land(self,board):
         self.board=board
-    def build(thing_to_build,direction=None):
-        pass
 class Adjust:
     def __init__(self,x,y,node,width,height,start=0,color='white'):
         self.x=x
@@ -173,15 +171,18 @@ def create_board(width_in_tiles, height_in_tiles):
             dotrees=1
             dosheep=1
             dowater=1
-            if map[bleh,bluh]<0.25:
+            dodesert=1
+            if map[bleh,bluh]<0.2:
                 dowater=60
-            elif map[bleh,bluh]>0.25 and map[bleh,bluh]<0.5:
+            elif map[bleh,bluh]>0.2 and map[bleh,bluh]<0.4:
                 dograss=40
-            elif map[bleh,bluh]>0.5 and map[bleh,bluh]<0.65:
+            elif map[bleh,bluh]>0.4 and map[bleh,bluh]<0.6:
                 dotrees=40
-            elif map[bleh,bluh]>0.65 and map[bleh,bluh]<1:
+            elif map[bleh,bluh]>0.6 and map[bleh,bluh]<0.8:
+                dodesert=40
+            elif map[bleh,bluh]>0.8:
                 domountains=40
-            biome = goodrand('choice',('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))
+            biome = goodrand('choice',('desert',dodesert),('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))
             new_tile = Tile(tile_coords=(bleh, bluh), biome=biome)
             board[bleh].append(new_tile)
             tiles.add(new_tile)
@@ -240,3 +241,10 @@ class Tile(pygame.sprite.Sprite):
             pygame.draw.rect(self.image,'black',(0,0,s*0.25,s*0.25))
             pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
             pygame.draw.line(self.image,'black',(s*0.9,s*0.5),(s*0.9,s),3)
+        if self.biome == 'desert':
+            pygame.draw.rect(self.image,[240, 202, 79],(0,0,s,s))
+            pygame.draw.line(self.image,[35, 156, 11],(s/2,s),(s/2,s/8),1)
+            pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),(0,s/2),1)
+            pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),((s/8)*7,s/2),1)
+            pygame.draw.line(self.image,[35, 156, 11],(0,(s/8)*3),(0,s/2),1)
+            pygame.draw.line(self.image,[35, 156, 11],((s/8)*7,s/4),((s/8)*7,s/2),1)
