@@ -66,6 +66,7 @@ while True:
             self.y=y
             self.speed=1
             self.life=100
+            self.first=1
             self.board=board
             self.cooldown=0
             self.gox=self.x-int(choice(['20','-20']))
@@ -75,32 +76,45 @@ while True:
             kill=False
             if self.cooldown==2:
                 self.cooldown=0
-                kill=True
-                choicegox=['20','-20']
-                choicegoy=['20','-20']
-                for k in range(len(choicegoy)):
+                kill=25
+                choicegox=['20','0','-20']
+                choicegoy=['20','0','-20']
+                for k in range(2):
                     move=randint(0,(len(choicegox)-1))
                     movey=randint(0,(len(choicegoy)-1))
+                    if choicegoy==['20','-20']:
+                        move=1
+                    if move==0 or move==2:
+                        movey=1
                     self.gox=self.x-int(choicegox[move])
                     self.goy=self.y-int(choicegoy[movey])
                     choicegox.pop(move)
                     choicegoy.pop(movey)
-                    try:
-                        if self.gox==int(self.gox) and (self.gox/10)<len(self.board) and self.goy==int(self.goy) and (self.goy/10)<len(self.board[0]) and (board[round(self.gox/10)][round(self.goy/10)].biome!='water'):
+                    if self.first==0:
+                        if self.gox==int(self.gox) and self.goy==int(self.goy) and self.gox==abs(self.gox) and (self.gox/10)<len(self.board) and self.goy==abs(self.goy) and (self.goy/10)<len(self.board[0]) and board[round(self.gox/10)][round(self.goy/10)].biome!='water':
                             if self.board[round(self.x/10)][round(self.y/10)].biome!='water':
                                 kill=False
                                 break
-                    except IndexError:
-                        pass
                 self.moving=True
+            if first==0:
+                if self.board[round(self.x/10)][round(self.y/10)].biome=='trees':
+                    pass
+                    ##moveability=-((self.speed/4)/3)
+                elif self.board[round(self.x/10)][round(self.y/10)].biome=='mounains':
+                    pass
+                    ##moveability=-(self.speed/2)
+                else:
+                    pass
+            moveability=0
+            self.first=0
             if self.x<self.gox:
-                self.x+=self.speed
+                self.x+=self.speed+moveability
             elif self.x>self.gox:
-                self.x-=self.speed
+                self.x-=self.speed+moveability
             if self.y<self.goy:
-                self.y+=self.speed
+                self.y+=self.speed+moveability
             elif self.y>self.goy:
-                self.y-=self.speed
+                self.y-=self.speed+moveability
             if self.x==self.gox and self.y==self.goy:
                 self.moving=False
                 self.cooldown=1
@@ -109,11 +123,18 @@ while True:
             return kill
         def draw(self,surface):
             pygame.draw.circle(surface,'black',(self.x,self.y),5)
-            pygame.draw.line(surface,'red',(self.x-25,self.y+10),((self.x-25)+(self.life/2),self.y+10),2)
-        def harvest(self):
-            for bleh in range(len(self.board.resources)):
-                self.resources.append(self.board.resources[bleh])
+            pygame.draw.line(surface,'red',(self.x-12.5,self.y+10),((self.x-12.5)+(self.life/4),self.y+10),2)
+        def harvest(self,tile='sheep'):
+            try:
+                if self.board[round(self.x/10)][round(self.y/10)].biome==tile:
+                    for bleh in range(len(self.board[round(self.x/10)][round(self.y/10)].resources)):
+                        self.resources.append(self.board.resources[bleh])
+                        self.board.resources=[]
+            except IndexError:
+                pass
             return self.board
+        def update_land(self,board):
+            self.board=board
     class Controls:
         def menu(font,backgroundcolor,title,screen,*options):
             screen.fill(backgroundcolor)
@@ -210,6 +231,10 @@ while True:
             new_tile = Tile(tile_coords=(bleh, bluh), biome=biome)
             board[bleh].append(new_tile)
             tiles.add(new_tile)
+    for bleh in range(len(board)):
+        for bluh in range(len(board[bleh])):
+            if board[bleh][bluh].biome=='sheep':
+                board[bleh][bluh].resources=['meat','meat']
     yx=randint(1,width_in_tiles)
     yy=randint(1,height_in_tiles)
     cool=0
@@ -372,7 +397,11 @@ while True:
         pop=[]
         for bleh in range(len(peeps)):
             if space==0:
-                if peeps[bleh].move():
+                peeps[bleh].harvest()
+                kill=peeps[bleh].move()
+                if kill!=False:
+                    peeps[bleh].life-=kill
+                if peeps[bleh].life==0:
                     pop.append(bleh)
             peeps[bleh].draw(screen)
             if space==1:
