@@ -8,6 +8,20 @@ from PygameWidgets import *
 pygame.init()
 Clock=pygame.time.Clock()
 import time
+def is_legal_move(board,x,y,node='tile',tile_side=10):
+    try:
+        if node=='tile':
+            if board[x-1][y-1].biome=='water':
+                return False
+            else:
+                return True
+        else:
+            if board[(x)/tile_side][(y)/tile_side].biome=='water':
+                return False
+            else:
+                return True
+    except IndexError:
+        return False
 while True:
     my_font = pygame.font.SysFont('Comic Sans MS', 50)
     width=1440
@@ -68,30 +82,30 @@ while True:
             self.life=100
             self.first=1
             self.board=board
-            self.cooldown=0
-            self.gox=self.x-int(choice(['20','-20']))
-            self.goy=self.y-int(choice(['20','-20']))
-            self.moving=True
+            self.cooldown=1
+            self.gox=self.x
+            self.goy=self.y
+            self.moving=False
         def move(self):
             kill=False
             if self.cooldown==2:
                 self.cooldown=0
                 kill=25
-                choicegox=['20','0','-20']
-                choicegoy=['20','0','-20']
+                choicegox=['1','0','-1']
+                choicegoy=['1','0','-1']
                 for k in range(2):
                     move=randint(0,(len(choicegox)-1))
                     movey=randint(0,(len(choicegoy)-1))
-                    if choicegoy==['20','-20']:
+                    if choicegoy==['1','-1']:
                         move=1
-                    if move==0 or move==2:
+                    if choicegox==['1','-1']:
                         movey=1
                     self.gox=self.x-int(choicegox[move])
                     self.goy=self.y-int(choicegoy[movey])
                     choicegox.pop(move)
                     choicegoy.pop(movey)
                     if self.first==0:
-                        if self.gox==int(self.gox) and self.goy==int(self.goy) and self.gox==abs(self.gox) and (self.gox/10)<len(self.board) and self.goy==abs(self.goy) and (self.goy/10)<len(self.board[0]) and board[round(self.gox/10)][round(self.goy/10)].biome!='water':
+                        if is_legal_move(board,self.gox,self.goy):
                             if self.board[round(self.x/10)][round(self.y/10)].biome!='water':
                                 kill=False
                                 break
@@ -108,13 +122,13 @@ while True:
             moveability=0
             self.first=0
             if self.x<self.gox:
-                self.x+=self.speed+moveability
+                self.x+=(self.speed)/10
             elif self.x>self.gox:
-                self.x-=self.speed+moveability
+                self.x-=(self.speed)/10
             if self.y<self.goy:
-                self.y+=self.speed+moveability
+                self.y+=(self.speed)/10
             elif self.y>self.goy:
-                self.y-=self.speed+moveability
+                self.y-=(self.speed)/10
             if self.x==self.gox and self.y==self.goy:
                 self.moving=False
                 self.cooldown=1
@@ -122,14 +136,15 @@ while True:
                 self.cooldown+=1
             return kill
         def draw(self,surface):
-            pygame.draw.circle(surface,'black',(self.x,self.y),5)
-            pygame.draw.line(surface,'red',(self.x-12.5,self.y+10),((self.x-12.5)+(self.life/4),self.y+10),2)
+            pygame.draw.circle(surface,'black',((self.x*10),(self.y*10)),5)
+            pygame.draw.line(surface,'red',((self.x*10)-12.5,(self.y*10)+10),(((self.x*10)-12.5)+(((self.life/4)/10)*10),(self.y*10)+10),2)
         def harvest(self,tile='sheep'):
             try:
                 if self.board[round(self.x/10)][round(self.y/10)].biome==tile:
                     for bleh in range(len(self.board[round(self.x/10)][round(self.y/10)].resources)):
-                        self.resources.append(self.board.resources[bleh])
-                        self.board.resources=[]
+                        ####self.resources.append(self.board.resources[bleh])
+                        ####self.board.resources=[]
+                        pass
             except IndexError:
                 pass
             return self.board
@@ -196,8 +211,8 @@ while True:
                 pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
                 pygame.draw.line(self.image,'black',(s*0.9,s*0.5),(s*0.9,s),3)
 
-    width_in_tiles = 72*2
-    height_in_tiles = 36*2
+    width_in_tiles = 144
+    height_in_tiles = 72
     width=width_in_tiles * Tile.size
     height=height_in_tiles * Tile.size
 
@@ -244,9 +259,9 @@ while True:
     cool=0
     x,y=pygame.mouse.get_pos()
     test=Adjust(100,200,0.5,1440,720)
-    peeps=[Entity((randint(1,72))*20,(randint(1,36))*20,board)]
+    peeps=[Entity((randint(1,144)),(randint(1,72)),board)]
     for k in range(20):
-        peeps.append(Entity(randint(1,1440),randint(1,720),board))
+        peeps.append(Entity(randint(1,144),randint(1,72),board))
     space=0
     label = Label(text="Menu")
     slider = SliderControl(name="Speed", min=3, max=10, value=5)
