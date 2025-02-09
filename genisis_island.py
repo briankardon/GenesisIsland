@@ -12,21 +12,21 @@ width=1440
 height=720
 screen=pygame.display.set_mode((width, height))
 
-peeps=[]
+peeps=pygame.sprite.Group()
 reset = False
 exit = False
 
 def speed_changed_callback(new_speed):
-    for peep in peeps:
+    for peep in peeps.sprites():
         peep.speed = (new_speed)/50
 def reset_button_callback(new_reset):
     global reset
     reset = new_reset
-    print('reset_callback')
 def exit_button_callback(new_exit):
     global exit
     exit = new_exit
-    print('exit_callback')
+def zoom_changed_callback(new_tile_size):
+    Tile.size = new_tile_size
 
 while True:
     reset = False
@@ -54,7 +54,7 @@ while True:
     test=Adjust(100,200,0.5,1440,720)
 
     for k in range(20):
-        peeps.append(Entity(randint(1,144),randint(1,72),board))
+        peeps.add(Entity(randint(1,144),randint(1,72),board))
     space=0
     label = Label(text="Menu")
     speed_slider = SliderControl(name="Speed", min=3, max=10, value=5,
@@ -62,7 +62,7 @@ while True:
     zoom_slider = IncrementControl(
                 name="Zoom",
                 min=1, max=100, value=10,
-                value_change_callbacks=[change_tile_size]
+                value_change_callbacks=[zoom_changed_callback]
                 )
     menu = ControlMenu(position=(width / 2, height / 2), anchor='C', column_alignment='center')
     reset_button = ButtonControl(name="Reset", value_change_callbacks=[reset_button_callback])
@@ -80,6 +80,7 @@ while True:
     old_tile_size = Tile.size
 
     paused = False
+    pygame.mouse.set_visible(False)
     while True:
         # If necessary, update tile images for new zoom
         new_tile_size = Tile.size
@@ -87,6 +88,9 @@ while True:
             for tile in tiles.sprites():
                 tile.update_image()
                 tile.update_rect()
+            for peep in peeps.sprites():
+                peep.update_image()
+                peep.update_rect()
         old_tile_size = new_tile_size
 
         ##try:
@@ -94,10 +98,7 @@ while True:
         ##    dude.move()
         ##except NameError:
         ##    pass
-        screen.fill('blue')
-        pygame.mouse.set_visible(False)
         x,y=pygame.mouse.get_pos()
-        last=zoom_slider.get_value()
         for event in pygame.event.get():
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_SPACE:
@@ -113,27 +114,22 @@ while True:
                 if not paused:
                     if event.button == 1:
                         x_tile, y_tile = screen2Tile(x, y)
-                        peeps.append(Entity(int(x_tile), int(y_tile), board))
+                        peeps.add(Entity(int(x_tile), int(y_tile), board))
             menu.handle_event(event)
 
         key=pygame.key.get_pressed()
 
-        tiles.draw(screen)
-        now=zoom_slider.get_value()
-        if now!=last:
-            if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]:
-                zoom_slider.set_value(10)
-
         if not paused:
             killed=[]
-            for peep in peeps:
+            for peep in peeps.sprites():
                 peep.harvest()
                 kill=peep.move()
                 if kill!=False:
                     peep.life -= kill
                 if peep.life==0:
                     killed.append(peep)
-                peep.update()
+
+            peeps.update()
             for peep in killed:
                 peeps.remove(peep)
 
@@ -143,8 +139,9 @@ while True:
             pygame.quit()
             sys.exit()
 
-        for peep in peeps:
-            peep.draw(screen)
+        screen.fill('blue')
+        tiles.draw(screen)
+        peeps.draw(screen)
 
         if paused:
             menu.update()
