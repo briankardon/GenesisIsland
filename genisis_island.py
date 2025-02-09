@@ -6,24 +6,7 @@ from random import randint, choice
 
 pygame.init()
 Clock=pygame.time.Clock()
-<<<<<<< Updated upstream
 
-=======
-def is_legal_move(board,x,y,node='tile',tile_side=10):
-    try:
-        if node=='tile':
-            if board[x-1][y-1].biome=='water':
-                return False
-            else:
-                return True
-        else:
-            if board[(x)/tile_side][(y)/tile_side].biome=='water':
-                return False
-            else:
-                return True
-    except IndexError:
-        return False
->>>>>>> Stashed changes
 my_font = pygame.font.SysFont('Comic Sans MS', 50)
 width=1440
 height=720
