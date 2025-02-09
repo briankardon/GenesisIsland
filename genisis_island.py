@@ -33,7 +33,7 @@ while True:
     cool=0
     x,y=pygame.mouse.get_pos()
     test=Adjust(100,200,0.5,1440,720)
-    peeps=[Entity((randint(1,144)),(randint(1,72)),board)]
+    peeps=[]
     for k in range(20):
         peeps.append(Entity(randint(1,144),randint(1,72),board))
     space=0
@@ -74,6 +74,7 @@ while True:
         screen.fill('blue')
         pygame.mouse.set_visible(False)
         x,y=pygame.mouse.get_pos()
+
         for event in pygame.event.get():
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_SPACE and space==1:
@@ -83,20 +84,11 @@ while True:
             if event.type==pygame.MOUSEBUTTONDOWN:
                 if space==0:
                     peeps.append(Entity(x,y,board))
-                ##dude=Pathfinder(board,x,y,yx,yy)
             menu.handle_event(event)
+
         key=pygame.key.get_pressed()
+        
         tiles.draw(screen)
-        ##pygame.draw.circle(screen,'red',(yx*20-10,yy*20-10),10)
-        ##pygame.draw.line(screen,'white',(yx*20-10,yy*20-10),(x,y),2)
-        ##try:
-        ##    pygame.draw.circle(screen,'red',(dude.x*20,dude.y*20),10)
-        ##except NameError:
-        ##    pass
-        #dude.draw()
-        #test.draw(screen)
-        #test.updatenum()
-        #test.draw(screen)
         pop=[]
         for bleh in range(len(peeps)):
             if space==0:
@@ -106,6 +98,7 @@ while True:
                     peeps[bleh].life-=kill
                 if peeps[bleh].life==0:
                     pop.append(bleh)
+            peeps[bleh].update()
             peeps[bleh].draw(screen)
             if space==1:
                 peeps[bleh].speed=round((round(slider.get_value()/2)*2)/5)

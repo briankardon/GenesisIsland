@@ -36,9 +36,8 @@ class Entity:
         self.x=x
         self.resources=[]
         self.y=y
-        self.speed=1
+        self.speed=0.05
         self.life=100
-        self.first=1
         self.board=board
         self.cooldown=1
         self.gox=self.x
@@ -46,56 +45,43 @@ class Entity:
         self.moving=False
     def move(self):
         kill=False
-        if self.cooldown==2:
-            self.cooldown=0
-            kill=25
+        if not self.moving:
+            # Not currently moving, pick a destination
             choicegox=[1, 0, -1]
             choicegoy=[1, 0, -1]
-            for k in range(2):
-                move=randint(0,(len(choicegox)-1))
-                movey=randint(0,(len(choicegoy)-1))
-                if choicegoy==[1, -1]:
-                    move=1
-                if choicegox==[1, -1]:
-                    movey=1
-                self.gox=self.x-choicegox[move]
-                self.goy=self.y-choicegoy[movey]
-                choicegox.pop(move)
-                choicegoy.pop(movey)
-                if self.first==0:
-                    if is_legal_move(board,self.gox,self.goy):
-                        if self.board[round(self.x/10)][round(self.y/10)].biome!='water':
-                            kill=False
-                            break
-            self.moving=True
-        if first==0:
-            if self.board[round(self.x/10)][round(self.y/10)].biome=='trees':
-                pass
-                ##moveability=-((self.speed/4)/3)
-            elif self.board[round(self.x/10)][round(self.y/10)].biome=='mounains':
-                pass
-                ##moveability=-(self.speed/2)
-            else:
-                pass
-        moveability=0
-        self.first=0
-        if self.x<self.gox:
-            self.x+=(self.speed)/10
-        elif self.x>self.gox:
-            self.x-=(self.speed)/10
-        if self.y<self.goy:
-            self.y+=(self.speed)/10
-        elif self.y>self.goy:
-            self.y-=(self.speed)/10
-        if self.x==self.gox and self.y==self.goy:
-            self.moving=False
-            self.cooldown=1
-        if self.cooldown>0:
-            self.cooldown+=1
+            movex=choice(choicegox)
+            movey=choice(choicegoy)
+            new_x = self.x + movex
+            new_y = self.y + movey
+            if is_legal_move(self.board, new_x, new_y):
+                self.gox = new_x
+                self.goy = new_y
+                kill=False
+                self.moving = True
         return kill
+
+    def update(self):
+        if self.x < self.gox:
+            self.x += self.speed
+        elif self.x > self.gox:
+            self.x -= self.speed
+        if self.y < self.goy:
+            self.y += self.speed
+        elif self.y > self.goy:
+            self.y -= self.speed
+        if abs(self.x - self.gox) < self.speed and abs(self.y - self.goy) < self.speed:
+            # Made it to destination
+            self.x = self.gox
+            self.y = self.goy
+            self.moving = False
+
     def draw(self,surface):
-        pygame.draw.circle(surface,'black',((self.x*10),(self.y*10)),5)
-        pygame.draw.line(surface,'red',((self.x*10)-12.5,(self.y*10)+10),(((self.x*10)-12.5)+(((self.life/4)/10)*10),(self.y*10)+10),2)
+        pygame.draw.circle(surface,'black',((self.x * Tile.size),(self.y * Tile.size)), Tile.size/2)
+        health_x0 = self.x * Tile.size - 12.5
+        health_y0 = self.y * Tile.size + 10
+        health_x1 = health_x0 + self.life/4
+        health_y1 = self.y*Tile.size + 10
+        pygame.draw.line(surface,'red',(health_x0, health_y0),(health_x1,health_y1),2)
     def harvest(self,tile='sheep'):
         try:
             if self.board[round(self.x/10)][round(self.y/10)].biome==tile:

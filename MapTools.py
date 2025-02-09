@@ -62,10 +62,6 @@ def riverify(map, min_value=0, length=20):
         map[x, y] = min_value
     return map
 
-
-
-
-
 def islandify(map, sea_level, sea_width, min_value=None, max_value=None):
     """Alter an existing map to add a sea border around the perimeter
 
