@@ -22,11 +22,11 @@ def speed_changed_callback(new_speed):
 def reset_button_callback(new_reset):
     global reset
     reset = new_reset
-    print('reset_callback')
 def exit_button_callback(new_exit):
     global exit
     exit = new_exit
-    print('exit_callback')
+def zoom_changed_callback(new_tile_size):
+    Tile.size = new_tile_size
 
 while True:
     reset = False
@@ -62,7 +62,7 @@ while True:
     zoom_slider = IncrementControl(
                 name="Zoom",
                 min=1, max=100, value=10,
-                value_change_callbacks=[change_tile_size]
+                value_change_callbacks=[zoom_changed_callback]
                 )
     menu = ControlMenu(position=(width / 2, height / 2), anchor='C', column_alignment='center')
     reset_button = ButtonControl(name="Reset", value_change_callbacks=[reset_button_callback])
@@ -97,7 +97,6 @@ while True:
         screen.fill('blue')
         pygame.mouse.set_visible(False)
         x,y=pygame.mouse.get_pos()
-        last=zoom_slider.get_value()
         for event in pygame.event.get():
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_SPACE:
@@ -119,10 +118,6 @@ while True:
         key=pygame.key.get_pressed()
 
         tiles.draw(screen)
-        now=zoom_slider.get_value()
-        if now!=last:
-            if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]:
-                zoom_slider.set_value(10)
 
         if not paused:
             killed=[]
