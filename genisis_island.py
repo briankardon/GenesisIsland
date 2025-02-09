@@ -151,6 +151,10 @@ while True:
                 if y>60+(bleh*spacing) and y<60+(((bleh)+1)*spacing) and x>hw-(((spacing-3))/2) and x<hw+((spacing-3))/2:
                     return options[bleh][1]
             return None
+
+    def change_tile_size(size):
+        Tile.size = size
+
     class Tile(pygame.sprite.Sprite):
         size=10
         def __init__(self, *args, tile_coords=(0, 0), resources=[],biome='plains', grass_color=None, **kwargs):
@@ -240,10 +244,17 @@ while True:
     cool=0
     x,y=pygame.mouse.get_pos()
     test=Adjust(100,200,0.5,1440,720)
-    peeps=[Entity((randint(1,72))*20,(randint(1,36))*20,board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board),Entity(randint(1,1440),randint(1,720),board)]
+    peeps=[Entity((randint(1,72))*20,(randint(1,36))*20,board)]
+    for k in range(20):
+        peeps.append(Entity(randint(1,1440),randint(1,720),board))
     space=0
     label = Label(text="Menu")
     slider = SliderControl(name="Speed", min=3, max=10, value=5)
+    zoom_slider = SliderControl(
+                name="Zoom",
+                min=1, max=100, value=10,
+                value_change_callbacks=[change_tile_size]
+                )
     menu = ControlMenu(position=(width / 2, height / 2), anchor='C', column_alignment='center')
     button = ButtonControl(name="Reset")
     exit = ButtonControl(name="Exit")
@@ -252,11 +263,20 @@ while True:
     population = Label(text=do.format(x=str(len(peeps))))
     menu.add(label)
     menu.add(slider)
+    menu.add(zoom_slider)
     menu.add(button)
     menu.add(population)
     menu.add(exit)
     #test=Adjust(720,360,0.5,100,300,start=0,color='white')
+    old_tile_size = Tile.size
     while True:
+        new_tile_size = Tile.size
+        if new_tile_size != old_tile_size:
+            for tile in tiles.sprites():
+                tile.update_image()
+                tile.update_rect()
+        old_tile_size = new_tile_size
+
         ##try:
         ##    dude.makepath()
         ##    dude.move()
