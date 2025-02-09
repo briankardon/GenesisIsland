@@ -157,7 +157,11 @@ def create_board(width_in_tiles, height_in_tiles):
     board = []
     tiles = pygame.sprite.Group()
     map=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
-    map=islandify(map, 0.25, 5, min_value=-0.25, max_value=1)
+    ore=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
+    fish=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
+    wheat=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
+    sand=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
+    lumber=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
     num_rivers = goodrand('randint', (7, 1), (8, 2), (9, 3), (10, 2), (11, 1))
     min_river_length = 10
     max_river_length = 100
@@ -190,10 +194,86 @@ def create_board(width_in_tiles, height_in_tiles):
             new_tile = Tile(tile_coords=(bleh, bluh), biome=biome)
             board[bleh].append(new_tile)
             tiles.add(new_tile)
+    ores=[]
+    sands=[]
+    lumbers=[]
+    wheats=[]
+    fishs=[]
+    for bleh in range(width_in_tiles):
+        ores.append([])
+        for bluh in range(height_in_tiles):
+            if ore[bleh,bluh]<2.5:
+                ores[bleh].append(0)
+            if ore[bleh,bluh]>2.5 and ore[bleh,bluh]<5:
+                ores[bleh].append(1)
+            if ore[bleh,bluh]>5 and ore[bleh,bluh]<7.5:
+                ores[bleh].append(2)
+            else:
+                ores[bleh].append(3)
+    for bleh in range(width_in_tiles):
+        sands.append([])
+        for bluh in range(height_in_tiles):
+            if sand[bleh,bluh]<2.5:
+                sands[bleh].append(0)
+            if sand[bleh,bluh]>2.5 and sand[bleh,bluh]<5:
+                sands[bleh].append(1)
+            if sand[bleh,bluh]>5 and sand[bleh,bluh]<7.5:
+                sands[bleh].append(2)
+            else:
+                sands[bleh].append(3)
+    for bleh in range(width_in_tiles):
+        fishs.append([])
+        for bluh in range(height_in_tiles):
+            if fish[bleh,bluh]<2.5:
+                fishs[bleh].append(0)
+            if fish[bleh,bluh]>2.5 and fish[bleh,bluh]<5:
+                fishs[bleh].append(1)
+            if fish[bleh,bluh]>5 and fish[bleh,bluh]<7.5:
+                fishs[bleh].append(2)
+            else:
+                fishs[bleh].append(3)
+    for bleh in range(width_in_tiles):
+        lumbers.append([])
+        for bluh in range(height_in_tiles):
+            if lumber[bleh,bluh]<2.5:
+                lumbers[bleh].append(0)
+            if lumber[bleh,bluh]>2.5 and lumber[bleh,bluh]<5:
+                lumbers[bleh].append(1)
+            if lumber[bleh,bluh]>5 and lumber[bleh,bluh]<7.5:
+                lumbers[bleh].append(2)
+            else:
+                lumbers[bleh].append(3)
+    for bleh in range(width_in_tiles):
+        wheats.append([])
+        for bluh in range(height_in_tiles):
+            if wheat[bleh,bluh]<2.5:
+                wheats[bleh].append(0)
+            if wheat[bleh,bluh]>2.5 and wheat[bleh,bluh]<5:
+                wheats[bleh].append(1)
+            if wheat[bleh,bluh]>5 and wheat[bleh,bluh]<7.5:
+                wheats[bleh].append(2)
+            else:
+                wheats[bleh].append(3)
     for bleh in range(len(board)):
         for bluh in range(len(board[bleh])):
-            if board[bleh][bluh].biome=='sheep':
-                board[bleh][bluh].resources=['meat','meat']
+            if board[bleh][bluh].biome=='water':
+                for blih in range(fishs[bleh][bluh]):
+                    board[bleh][bluh].resources.append('fish')
+            if board[bleh][bluh].biome=='grass':
+                for blih in range(wheats[bleh][bluh]):
+                    board[bleh][bluh].resources.append('wheat')
+            if board[bleh][bluh].biome=='trees':
+                for blih in range(lumbers[bleh][bluh]):
+                    board[bleh][bluh].resources.append('log')
+            if board[bleh][bluh].biome=='desert':
+                for blih in range(sands[bleh][bluh]):
+                    board[bleh][bluh].resources.append('sand')
+            if board[bleh][bluh].biome=='mountains':
+                for blih in range(ores[bleh][bluh]):
+                    board[bleh][bluh].resources.append('ore')
+    for bleh in range(len(board)):
+        for bluh in range(len(board[bleh])):
+            board[bleh][bluh].update_image()
     return board, tiles
 
 class Tile(pygame.sprite.Sprite):
@@ -238,18 +318,26 @@ class Tile(pygame.sprite.Sprite):
             self.image.fill([0, self.grass_color, 0])
         if self.biome == 'mountains':
             pygame.draw.polygon(self.image, 'gray', ((0, s), (s*0.5,0),(s,s),(0,s)))
+            for bleh in range(len(self.resources)):
+                pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
         if self.biome == 'trees':
             pygame.draw.line(self.image,'brown',(s*0.5,s*0.5),(s*0.5,s),5)
             pygame.draw.rect(self.image,[0,100,0],(0,0,s,s*0.5))
+            for bleh in range(len(self.resources)):
+                pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
         if self.biome == 'sheep':
             pygame.draw.rect(self.image,'white',(s*0.25,0,s*3*0.25,s*0.5))
             pygame.draw.rect(self.image,'black',(0,0,s*0.25,s*0.25))
             pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
             pygame.draw.line(self.image,'black',(s*0.9,s*0.5),(s*0.9,s),3)
+            for bleh in range(len(self.resources)):
+                pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
         if self.biome == 'desert':
             pygame.draw.rect(self.image,[240, 202, 79],(0,0,s,s))
-            pygame.draw.line(self.image,[35, 156, 11],(s/2,s),(s/2,s/8),1)
-            pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),(0,s/2),1)
-            pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),((s/8)*7,s/2),1)
-            pygame.draw.line(self.image,[35, 156, 11],(0,(s/8)*3),(0,s/2),1)
-            pygame.draw.line(self.image,[35, 156, 11],((s/8)*7,s/4),((s/8)*7,s/2),1)
+            pygame.draw.line(self.image,[35, 156, 11],(s/2,s),(s/2,s/8),int(1+(s/20)))
+            pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),(0,s/2),int(1+(s/20)))
+            pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),((s/8)*7,s/2),int(1+(s/20)))
+            pygame.draw.line(self.image,[35, 156, 11],(0,(s/8)*3),(0,s/2),int(1+(s/20)))
+            pygame.draw.line(self.image,[35, 156, 11],((s/8)*7,s/4),((s/8)*7,s/2),int(1+(s/20)))
+            for bleh in range(len(self.resources)):
+                pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
