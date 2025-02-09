@@ -2,6 +2,7 @@ import pygame
 import sys
 from PygameWidgets import *
 from GenesisUtils import *
+from random import randint, choice
 
 pygame.init()
 Clock=pygame.time.Clock()
