@@ -11,7 +11,26 @@ my_font = pygame.font.SysFont('Comic Sans MS', 50)
 width=1440
 height=720
 screen=pygame.display.set_mode((width, height))
+
+peeps=[]
+reset = False
+exit = False
+
+def speed_changed_callback(new_speed):
+    for peep in peeps:
+        peep.speed = new_speed
+def reset_button_callback(new_reset):
+    global reset
+    reset = new_reset
+    print('reset_callback')
+def exit_button_callback(new_exit):
+    global exit
+    exit = new_exit
+    print('exit_callback')
+
 while True:
+    reset = False
+    exit = False
     # Display loading screen
     screen.fill('blue')
     for event in pygame.event.get():
@@ -33,32 +52,36 @@ while True:
     cool=0
     x,y=pygame.mouse.get_pos()
     test=Adjust(100,200,0.5,1440,720)
-    peeps=[]
+
     for k in range(20):
         peeps.append(Entity(randint(1,144),randint(1,72),board))
     space=0
     label = Label(text="Menu")
-    slider = SliderControl(name="Speed", min=3, max=10, value=5)
+    speed_slider = SliderControl(name="Speed", min=3, max=10, value=5,
+                                value_change_callbacks=[speed_changed_callback])
     zoom_slider = IncrementControl(
                 name="Zoom",
                 min=1, max=100, value=10,
                 value_change_callbacks=[change_tile_size]
                 )
     menu = ControlMenu(position=(width / 2, height / 2), anchor='C', column_alignment='center')
-    button = ButtonControl(name="Reset")
-    exit = ButtonControl(name="Exit")
+    reset_button = ButtonControl(name="Reset", value_change_callbacks=[reset_button_callback])
+    exit_button = ButtonControl(name="Exit", value_change_callbacks=[exit_button_callback])
     do='''The population is
            {x}'''
     population = Label(text=do.format(x=str(len(peeps))))
     menu.add(label)
-    menu.add(slider)
+    menu.add(speed_slider)
     menu.add(zoom_slider)
-    menu.add(button)
+    menu.add(reset_button)
     menu.add(population)
-    menu.add(exit)
+    menu.add(exit_button)
     #test=Adjust(720,360,0.5,100,300,start=0,color='white')
     old_tile_size = Tile.size
+
+    paused = False
     while True:
+        # If necessary, update tile images for new zoom
         new_tile_size = Tile.size
         if new_tile_size != old_tile_size:
             for tile in tiles.sprites():
@@ -77,13 +100,13 @@ while True:
         last=zoom_slider.get_value()
         for event in pygame.event.get():
             if event.type==pygame.KEYDOWN:
-                if event.key==pygame.K_SPACE and space==1:
-                    space=0
-                elif event.key==pygame.K_SPACE and space==0:
-                    space=1
+                if event.key==pygame.K_SPACE:
+                    paused = not paused
+                    population.set_text(do.format(x=str(len(peeps))))
             if event.type==pygame.MOUSEBUTTONDOWN:
-                if space==0:
-                    peeps.append(Entity(x,y,board))
+                if not paused:
+                    x_tile, y_tile = screen2Tile(x, y)
+                    peeps.append(Entity(int(x_tile), int(y_tile), board))
             menu.handle_event(event)
 
         key=pygame.key.get_pressed()
@@ -94,33 +117,30 @@ while True:
         if now!=last:
             if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]:
                 zoom_slider.set_value(10)
-        pop=[]
-        for bleh in range(len(peeps)):
-            if space==0:
-                peeps[bleh].harvest()
-                kill=peeps[bleh].move()
+
+        if not paused:
+            killed=[]
+            for peep in peeps:
+                peep.harvest()
+                kill=peep.move()
                 if kill!=False:
-                    peeps[bleh].life-=kill
-                if peeps[bleh].life==0:
-                    pop.append(bleh)
-            peeps[bleh].update()
-            peeps[bleh].draw(screen)
-            if space==1:
-                peeps[bleh].speed=round((round(slider.get_value()/2)*2)/5)
-        for bleh in range(len(pop)):
-            try:
-                peeps.pop(pop[bleh])
-            except IndexError:
-                pass
-        if button.get_value():
-            if space==1:
-                break
-        if exit.get_value():
-            if space==1:
-                pygame.quit()
-                sys.exit()
-        population.set_text(do.format(x=str(len(peeps))))
-        if space==1:
+                    peep.life -= kill
+                if peep.life==0:
+                    killed.append(peep)
+                peep.update()
+            for peep in killed:
+                peeps.remove(peep)
+
+        if reset:
+            break
+        if exit:
+            pygame.quit()
+            sys.exit()
+
+        for peep in peeps:
+            peep.draw(screen)
+
+        if paused:
             menu.update()
             menu.draw(screen)
             #Controls.menu('arial.ttf',[0,0,0],'menu',screen,('hi',0),('hi',1),('hi',2),('hi',3),('hi',4),('hi',5),('hi',6),('hi',7))

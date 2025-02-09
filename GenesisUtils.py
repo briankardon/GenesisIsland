@@ -3,6 +3,10 @@ from MapTools import *
 from random import randint, choice
 import numpy as np
 
+def screen2Tile(x, y):
+    return x / Tile.size, y / Tile.size
+
+
 def goodrand(which,*args):
     ret=[]
     for bleh in range(len(args)):
