@@ -63,12 +63,12 @@ class Entity:
                 choicegox.pop(move)
                 choicegoy.pop(movey)
                 if self.first==0:
-                    if is_legal_move(board,self.gox,self.goy):
+                    if is_legal_move(self.board,self.gox,self.goy):
                         if self.board[round(self.x/10)][round(self.y/10)].biome!='water':
                             kill=False
                             break
             self.moving=True
-        if first==0:
+        if self.first==0:
             if self.board[round(self.x/10)][round(self.y/10)].biome=='trees':
                 pass
                 ##moveability=-((self.speed/4)/3)
@@ -108,7 +108,8 @@ class Entity:
         return self.board
     def update_land(self,board):
         self.board=board
-
+    def build(thing_to_build,direction=None):
+        pass
 class Adjust:
     def __init__(self,x,y,node,width,height,start=0,color='white'):
         self.x=x

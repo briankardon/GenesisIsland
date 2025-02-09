@@ -39,7 +39,7 @@ while True:
     space=0
     label = Label(text="Menu")
     slider = SliderControl(name="Speed", min=3, max=10, value=5)
-    zoom_slider = SliderControl(
+    zoom_slider = IncrementControl(
                 name="Zoom",
                 min=1, max=100, value=10,
                 value_change_callbacks=[change_tile_size]
@@ -74,6 +74,7 @@ while True:
         screen.fill('blue')
         pygame.mouse.set_visible(False)
         x,y=pygame.mouse.get_pos()
+        last=zoom_slider.get_value()
         for event in pygame.event.get():
             if event.type==pygame.KEYDOWN:
                 if event.key==pygame.K_SPACE and space==1:
@@ -97,6 +98,10 @@ while True:
         #test.draw(screen)
         #test.updatenum()
         #test.draw(screen)
+        now=zoom_slider.get_value()
+        if now!=last:
+            if key[pygame.K_LSHIFT] or key[pygame.K_RSHIFT]:
+                zoom_slider.set_value(10)
         pop=[]
         for bleh in range(len(peeps)):
             if space==0:
