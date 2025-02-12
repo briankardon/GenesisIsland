@@ -16,6 +16,9 @@ peeps=pygame.sprite.Group()
 reset = False
 exit = False
 
+path_start = None
+path_end = None
+
 def speed_changed_callback(new_speed):
     for peep in peeps.sprites():
         peep.speed = (new_speed)/50
@@ -44,7 +47,7 @@ while True:
     width_in_tiles = 72*2
     height_in_tiles = 36*2
 
-    board, tiles = create_board(width_in_tiles, height_in_tiles)
+    board = create_board(width_in_tiles, height_in_tiles)
 
     first=1
     yx=randint(1,width_in_tiles)
@@ -54,7 +57,7 @@ while True:
     test=Adjust(100,200,0.5,1440,720)
 
     for k in range(20):
-        peeps.add(Entity(randint(1,144),randint(1,72),board))
+        peeps.add(Traveler(randint(1,144),randint(1,72),board))
     space=0
     label = Label(text="Menu")
     speed_slider = SliderControl(name="Speed", min=3, max=10, value=5,
@@ -85,13 +88,14 @@ while True:
         # If necessary, update tile images for new zoom
         new_tile_size = Tile.size
         if new_tile_size != old_tile_size:
-            for tile in tiles.sprites():
-                tile.update_image()
-                tile.update_rect()
+            board.update_image()
+            board.update_rect()
             for peep in peeps.sprites():
                 peep.update_image()
                 peep.update_rect()
         old_tile_size = new_tile_size
+
+        keys = pygame.key.get_pressed()
 
         ##try:
         ##    dude.makepath()
@@ -111,13 +115,26 @@ while True:
                 Tile.x0 += (new_x_screen - x)
                 Tile.y0 += (new_y_screen - y)
             elif event.type==pygame.MOUSEBUTTONDOWN:
-                if not paused:
-                    if event.button == 1:
-                        x_tile, y_tile = screen2Tile(x, y)
-                        peeps.add(Entity(int(x_tile), int(y_tile), board))
-            menu.handle_event(event)
+                if keys[pygame.K_LSHIFT]:
+                    x_tile, y_tile = screen2Tile(x, y)
+                    point = board[int(x_tile), int(y_tile)]
+                    for peep in peeps.sprites():
+                        peep.make_plan(point)
+                else:
+                    if not paused:
+                        if event.button == 1:
+                            x_tile, y_tile = screen2Tile(x, y)
+                            if path_start is None:
+                                path_start = (int(x_tile), int(y_tile))
+                            elif path_end is None:
+                                path_end = (int(x_tile), int(y_tile))
+                                print(path_start, path_end)
+                                board.find_path(path_start, path_end)
+                                path_start = None
+                                path_end = None
+                            peeps.add(Traveler(int(x_tile), int(y_tile), board))
 
-        key=pygame.key.get_pressed()
+            menu.handle_event(event)
 
         if not paused:
             killed=[]
@@ -140,7 +157,7 @@ while True:
             sys.exit()
 
         screen.fill('blue')
-        tiles.draw(screen)
+        board.draw(screen)
         peeps.draw(screen)
 
         if paused:
@@ -150,3 +167,4 @@ while True:
         pygame.draw.circle(screen,[255,100,100],(x,y),5)
         pygame.display.flip()
         Clock.tick(60)
+        # breakpoint()

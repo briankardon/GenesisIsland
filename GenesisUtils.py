@@ -1,7 +1,10 @@
 import pygame
 from MapTools import *
-from random import randint, choice
+from random import randint, choice, choices, sample
 import numpy as np
+from pathfinding.core.diagonal_movement import DiagonalMovement
+from pathfinding.core.grid import Grid
+from pathfinding.finder.a_star import AStarFinder
 
 def screen2Tile(x_screen, y_screen):
     x_tile = (x_screen + Tile.x0) / Tile.size
@@ -26,7 +29,7 @@ def goodrand(which,*args):
 def is_legal_move(board,x,y,node='tile',tile_side=10):
     try:
         if node=='tile':
-            if board[x][y].biome=='water':
+            if board[x, y].biome=='water':
                 return False
             else:
                 return True
@@ -50,6 +53,7 @@ class Entity(pygame.sprite.Sprite):
         self.moving=False
         self.image = None
         self.rect = None
+        self.color = 'black'
         self.update_image()
         self.update_rect()
 
@@ -58,7 +62,7 @@ class Entity(pygame.sprite.Sprite):
         self.image.fill((0, 0, 0, 0))
         pygame.draw.circle(
             self.image,
-            'black',
+            self.color,
             (Tile.size/2, Tile.size/2),
             Tile.size/2
         )
@@ -109,8 +113,8 @@ class Entity(pygame.sprite.Sprite):
 
     def harvest(self,tile='sheep'):
         try:
-            if self.board[round(self.x/10)][round(self.y/10)].biome==tile:
-                for bleh in range(len(self.board[round(self.x/10)][round(self.y/10)].resources)):
+            if self.board[round(self.x/10), round(self.y/10)].biome==tile:
+                for bleh in range(len(self.board[round(self.x/10), round(self.y/10)].resources)):
                     ####self.resources.append(self.board.resources[bleh])
                     ####self.board.resources=[]
                     pass
@@ -120,6 +124,34 @@ class Entity(pygame.sprite.Sprite):
 
     def update_land(self,board):
         self.board=board
+
+class Traveler(Entity):
+    def __init__(self, *args, **kwargs):
+        super().__init__(*args, **kwargs)
+        self.color = 'purple'
+        self.plan = []
+
+    def move(self):
+        if not self.moving:
+            # Not currently moving, pick a destination
+            if len(self.plan) == 0:
+                self.make_plan()
+
+            if len(self.plan) > 0:
+                self.gox, self.goy = self.plan.pop(0)
+                self.moving = True
+        return False
+
+    def make_plan(self, destination=None):
+        if destination is None:
+            destination = self.board.get_random_point()
+            print('destination:', destination.tile_coords)
+        print((self.x, self.y), destination.tile_coords)
+        try:
+            self.plan = self.board.find_path((int(self.x), int(self.y)), destination.tile_coords)
+        except IndexError:
+            breakpoint()
+
 class Adjust:
     def __init__(self,x,y,node,width,height,start=0,color='white'):
         self.x=x
@@ -172,14 +204,14 @@ def create_board(width_in_tiles, height_in_tiles):
     width=width_in_tiles * Tile.size
     height=height_in_tiles * Tile.size
 
-    board = []
-    tiles = pygame.sprite.Group()
-    map=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
-    ore=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
-    fish=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
-    wheat=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
-    sand=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
-    lumber=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
+    board = Board(width_in_tiles, height_in_tiles)
+    map=   make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
+    map=islandify(map, 0.25, 5, min_value=-0.25, max_value=1)
+    # ore=   make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
+    # fish=  make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
+    # wheat= make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
+    # sand=  make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
+    # lumber=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
     num_rivers = goodrand('randint', (7, 1), (8, 2), (9, 3), (10, 2), (11, 1))
     min_river_length = 10
     max_river_length = 100
@@ -190,7 +222,6 @@ def create_board(width_in_tiles, height_in_tiles):
         length = goodrand('randint', *zip(river_lengths, river_length_probs))
         map = riverify(map, length=100)
     for bleh in range(width_in_tiles):
-        board.append([])
         for bluh in range(height_in_tiles):
             dograss=1
             domountains=1
@@ -209,90 +240,112 @@ def create_board(width_in_tiles, height_in_tiles):
             elif map[bleh,bluh]>0.8:
                 domountains=40
             biome = goodrand('choice',('desert',dodesert),('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))
+            # ores = ore[bleh][bluh]
+            # fishs = fish[bleh][bluh]
+            # wheats = wheat[bleh][bluh]
+            # sands = sand[bleh][bluh]
+            # lumbers = lumber[bleh][bluh]
+
+            # if board[bleh, bluh].biome=='water':
+            #     for blih in range(fishs[bleh][bluh]):
+            #         board[bleh, bluh].resources.append('fish')
+            # if board[bleh, bluh].biome=='grass':
+            #     for blih in range(wheats[bleh][bluh]):
+            #         board[bleh, bluh].resources.append('wheat')
+            # if board[bleh, bluh].biome=='trees':
+            #     for blih in range(lumbers[bleh][bluh]):
+            #         board[bleh][bluh].resources.append('log')
+            # if board[bleh, bluh].biome=='desert':
+            #     for blih in range(sands[bleh][bluh]):
+            #         board[bleh, bluh].resources.append('sand')
+            # if board[bleh][bluh].biome=='mountains':
+            #     for blih in range(ores[bleh][bluh]):
+            #         board[bleh, bluh].resources.append('ore')
+
             new_tile = Tile(tile_coords=(bleh, bluh), biome=biome)
-            board[bleh].append(new_tile)
-            tiles.add(new_tile)
-    ores=[]
-    sands=[]
-    lumbers=[]
-    wheats=[]
-    fishs=[]
-    for bleh in range(width_in_tiles):
-        ores.append([])
-        for bluh in range(height_in_tiles):
-            if ore[bleh,bluh]<2.5:
-                ores[bleh].append(0)
-            if ore[bleh,bluh]>2.5 and ore[bleh,bluh]<5:
-                ores[bleh].append(1)
-            if ore[bleh,bluh]>5 and ore[bleh,bluh]<7.5:
-                ores[bleh].append(2)
-            else:
-                ores[bleh].append(3)
-    for bleh in range(width_in_tiles):
-        sands.append([])
-        for bluh in range(height_in_tiles):
-            if sand[bleh,bluh]<2.5:
-                sands[bleh].append(0)
-            if sand[bleh,bluh]>2.5 and sand[bleh,bluh]<5:
-                sands[bleh].append(1)
-            if sand[bleh,bluh]>5 and sand[bleh,bluh]<7.5:
-                sands[bleh].append(2)
-            else:
-                sands[bleh].append(3)
-    for bleh in range(width_in_tiles):
-        fishs.append([])
-        for bluh in range(height_in_tiles):
-            if fish[bleh,bluh]<2.5:
-                fishs[bleh].append(0)
-            if fish[bleh,bluh]>2.5 and fish[bleh,bluh]<5:
-                fishs[bleh].append(1)
-            if fish[bleh,bluh]>5 and fish[bleh,bluh]<7.5:
-                fishs[bleh].append(2)
-            else:
-                fishs[bleh].append(3)
-    for bleh in range(width_in_tiles):
-        lumbers.append([])
-        for bluh in range(height_in_tiles):
-            if lumber[bleh,bluh]<2.5:
-                lumbers[bleh].append(0)
-            if lumber[bleh,bluh]>2.5 and lumber[bleh,bluh]<5:
-                lumbers[bleh].append(1)
-            if lumber[bleh,bluh]>5 and lumber[bleh,bluh]<7.5:
-                lumbers[bleh].append(2)
-            else:
-                lumbers[bleh].append(3)
-    for bleh in range(width_in_tiles):
-        wheats.append([])
-        for bluh in range(height_in_tiles):
-            if wheat[bleh,bluh]<2.5:
-                wheats[bleh].append(0)
-            if wheat[bleh,bluh]>2.5 and wheat[bleh,bluh]<5:
-                wheats[bleh].append(1)
-            if wheat[bleh,bluh]>5 and wheat[bleh,bluh]<7.5:
-                wheats[bleh].append(2)
-            else:
-                wheats[bleh].append(3)
-    for bleh in range(len(board)):
-        for bluh in range(len(board[bleh])):
-            if board[bleh][bluh].biome=='water':
-                for blih in range(fishs[bleh][bluh]):
-                    board[bleh][bluh].resources.append('fish')
-            if board[bleh][bluh].biome=='grass':
-                for blih in range(wheats[bleh][bluh]):
-                    board[bleh][bluh].resources.append('wheat')
-            if board[bleh][bluh].biome=='trees':
-                for blih in range(lumbers[bleh][bluh]):
-                    board[bleh][bluh].resources.append('log')
-            if board[bleh][bluh].biome=='desert':
-                for blih in range(sands[bleh][bluh]):
-                    board[bleh][bluh].resources.append('sand')
-            if board[bleh][bluh].biome=='mountains':
-                for blih in range(ores[bleh][bluh]):
-                    board[bleh][bluh].resources.append('ore')
-    for bleh in range(len(board)):
-        for bluh in range(len(board[bleh])):
-            board[bleh][bluh].update_image()
-    return board, tiles
+            board[bleh, bluh] = new_tile
+
+    board.update_image()
+    return board
+
+class Board:
+    def __init__(self, width, height):
+        self.width = width
+        self.height = height
+        self.tiles = pygame.sprite.Group()
+        self.tile_array = [[None for k in range(self.height)] for k in range(self.width)]
+        self.pathfinding_grid = None
+
+    def draw(self, screen):
+        self.tiles.draw(screen)
+
+    def update(self):
+        self.tiles.update()
+
+    def update_image(self):
+        for tile in self.tiles.sprites():
+            tile.update_image()
+
+    def update_rect(self):
+        for tile in self.tiles.sprites():
+            tile.update_rect()
+
+    def get_random_point(self, n=None, biome=None):
+        possibilities = [tile for tile in self.tiles.sprites() if (biome is None or tile.biome == biome)]
+        if len(possibilities) == 0:
+            return None
+        if n is None:
+            return choice(possibilities)
+        else:
+            return sample(possibilities, k=n)
+
+    def find_path(self, start, end):
+        if self.pathfinding_grid is None:
+            pgrid = self.make_pathfinding_grid()
+            self.pathfinding_grid = Grid(matrix=pgrid)
+
+        start = self.pathfinding_grid.node(*start)
+        end = self.pathfinding_grid.node(*end)
+
+        finder = AStarFinder(diagonal_movement=DiagonalMovement.always)
+        path, runs = finder.find_path(start, end, self.pathfinding_grid)
+        # print(path)
+        # print('operations:', runs, 'path length:', len(path))
+        # print(self.pathfinding_grid.grid_str(path=path, start=start, end=end))
+        return [(n.x, n.y) for n in path]
+
+    def make_pathfinding_grid(self):
+        pgrid = []
+        for y in range(self.height):
+            pgrid.append([])
+            for x in range(self.width):
+                pgrid[y].append(self[x, y].get_pathfinding_value())
+        return pgrid
+
+    def __getitem__(self, idx):
+        self.check_idx(idx)
+        return self.tile_array[idx[0]][idx[1]]
+
+    def __setitem__(self, idx, tile):
+        self.check_idx(idx)
+        self.check_value(tile)
+        tile.tile_coords = idx
+        self.tiles.add(tile)
+        self.tile_array[idx[0]][idx[1]] = tile
+
+    def __delitem__(self, idx):
+        tile = self[idx]
+        if tile is not None:
+            self.tiles.remove(idx)
+            self.tile_array[idx[0]][idx[1]] = None
+
+    def check_idx(self, idx):
+        if type(idx) is not tuple or len(idx) != 2:
+            IndexError('Board must be indexed only with two indices')
+
+    def check_value(self, tile):
+        if type(tile) is not Tile:
+            ValueError('Board element can only be set to type Tile')
 
 class Tile(pygame.sprite.Sprite):
     size=10
@@ -306,6 +359,7 @@ class Tile(pygame.sprite.Sprite):
             resources=[],
             biome='plains',
             grass_color=None,
+            movement_cost=0,   # 0 for easiest, higher for harder
             **kwargs):
         super().__init__(*args, **kwargs)
         self.biome = biome
@@ -313,6 +367,7 @@ class Tile(pygame.sprite.Sprite):
         self.resources = resources
         self.image = None
         self.height = height
+        self.movement_cost = movement_cost
         if grass_color is None:
             self.grass_color=randint(150,230)
         else:
@@ -360,3 +415,12 @@ class Tile(pygame.sprite.Sprite):
             pygame.draw.line(self.image,[35, 156, 11],((s/8)*7,s/4),((s/8)*7,s/2),int(1+(s/20)))
             for bleh in range(len(self.resources)):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
+
+    def get_pathfinding_value(self):
+        if self.biome == 'water':
+            return 0
+        else:
+            return self.movement_cost + 1
+
+def flatten(xss):
+    return [x for xs in xss for x in xs]
