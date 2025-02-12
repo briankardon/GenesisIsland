@@ -57,7 +57,7 @@ while True:
     test=Adjust(100,200,0.5,1440,720)
 
     for k in range(20):
-        peeps.add(Traveler(randint(1,144),randint(1,72),board))
+        peeps.add(Traveler(randint(0,143),randint(0,71),board))
     space=0
     label = Label(text="Menu")
     speed_slider = SliderControl(name="Speed", min=3, max=10, value=5,

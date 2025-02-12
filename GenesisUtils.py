@@ -54,6 +54,7 @@ class Entity(pygame.sprite.Sprite):
         self.image = None
         self.rect = None
         self.color = 'black'
+        self.t = 0
         self.update_image()
         self.update_rect()
 
@@ -94,6 +95,7 @@ class Entity(pygame.sprite.Sprite):
         return kill
 
     def update(self):
+        self.t += 1
         x0, y0 = self.x, self.y
         if self.x < self.gox:
             self.x += self.speed
@@ -130,9 +132,10 @@ class Traveler(Entity):
         super().__init__(*args, **kwargs)
         self.color = 'purple'
         self.plan = []
+        self.wake_time = 0
 
     def move(self):
-        if not self.moving:
+        if not self.moving and self.t > self.wake_time:
             # Not currently moving, pick a destination
             if len(self.plan) == 0:
                 self.make_plan()
@@ -140,17 +143,15 @@ class Traveler(Entity):
             if len(self.plan) > 0:
                 self.gox, self.goy = self.plan.pop(0)
                 self.moving = True
+            else:
+                # Failed to make plan, go to sleep
+                self.wake_time = self.t + 1000
         return False
 
     def make_plan(self, destination=None):
         if destination is None:
             destination = self.board.get_random_point()
-            print('destination:', destination.tile_coords)
-        print((self.x, self.y), destination.tile_coords)
-        try:
-            self.plan = self.board.find_path((int(self.x), int(self.y)), destination.tile_coords)
-        except IndexError:
-            breakpoint()
+        self.plan = self.board.find_path((int(self.x), int(self.y)), destination.tile_coords)
 
 class Adjust:
     def __init__(self,x,y,node,width,height,start=0,color='white'):
