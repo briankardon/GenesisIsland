@@ -84,6 +84,7 @@ while True:
 
     paused = False
     pygame.mouse.set_visible(False)
+    grab_start = None
     while True:
         # If necessary, update tile images for new zoom
         new_tile_size = Tile.size
@@ -120,19 +121,14 @@ while True:
                     point = board[int(x_tile), int(y_tile)]
                     for peep in peeps.sprites():
                         peep.make_plan(point)
+                elif keys[pygame.K_LCTRL]:
+                    if event.button == 1:
+                        x_tile, y_tile = screen2Tile(x, y)
+                        peeps.add(Traveler(int(x_tile), int(y_tile), board))
                 else:
-                    if not paused:
-                        if event.button == 1:
-                            x_tile, y_tile = screen2Tile(x, y)
-                            if path_start is None:
-                                path_start = (int(x_tile), int(y_tile))
-                            elif path_end is None:
-                                path_end = (int(x_tile), int(y_tile))
-                                print(path_start, path_end)
-                                board.find_path(path_start, path_end)
-                                path_start = None
-                                path_end = None
-                            peeps.add(Traveler(int(x_tile), int(y_tile), board))
+                    if event.button == 1:
+                        x_tile, y_tile = screen2Tile(x, y)
+
 
             menu.handle_event(event)
 
