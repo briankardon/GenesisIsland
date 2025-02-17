@@ -222,7 +222,7 @@ def create_board(width_in_tiles, height_in_tiles):
     river_length_probs = (min_river_length + 1 - (((river_lengths-mid_river_length)**2)*min_river_length/(max_river_length-mid_river_length)**2)).astype('int')
     for r in range(30):
         length = goodrand('randint', *zip(river_lengths, river_length_probs))
-        map = riverify(map, length=100)
+        map = riverify(map, length=200, thicken_rate=0.02)
     for bleh in range(width_in_tiles):
         for bluh in range(height_in_tiles):
             dograss=1
@@ -231,17 +231,20 @@ def create_board(width_in_tiles, height_in_tiles):
             dosheep=1
             dowater=1
             dodesert=1
+            doice=1
             if map[bleh,bluh]<0.2:
-                dowater=60
-            elif map[bleh,bluh]>0.2 and map[bleh,bluh]<0.4:
-                dograss=40
-            elif map[bleh,bluh]>0.4 and map[bleh,bluh]<0.6:
-                dotrees=40
-            elif map[bleh,bluh]>0.6 and map[bleh,bluh]<0.8:
-                dodesert=40
-            elif map[bleh,bluh]>0.8:
-                domountains=40
-            biome = goodrand('choice',('desert',dodesert),('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater))
+                dowater=120
+            elif map[bleh,bluh]>0.2 and map[bleh,bluh]<=0.4:
+                dograss=100
+            elif map[bleh,bluh]>0.4 and map[bleh,bluh]<=0.6:
+                dotrees=100
+            elif map[bleh,bluh]>0.6 and map[bleh,bluh]<=0.75:
+                dodesert=100
+            elif map[bleh,bluh]>0.75 and map[bleh, bluh]<=0.9:
+                domountains=100
+            elif map[bleh,bluh]> 0.9:
+                doice=100
+            biome = goodrand('choice',('desert',dodesert),('grass',dograss),('mountains',domountains),('trees',dotrees),('sheep',dosheep),('water',dowater), ('ice', doice))
             # ores = ore[bleh][bluh]
             # fishs = fish[bleh][bluh]
             # wheats = wheat[bleh][bluh]
@@ -409,19 +412,19 @@ class Tile(pygame.sprite.Sprite):
             pygame.draw.polygon(self.image, 'gray', ((0, s), (s*0.5,0),(s,s),(0,s)))
             for bleh in range(self.resources):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
-        if self.biome == 'trees':
+        elif self.biome == 'trees':
             pygame.draw.line(self.image,'brown',(s*0.5,s*0.5),(s*0.5,s),5)
             pygame.draw.rect(self.image,[0,100,0],(0,0,s,s*0.5))
             for bleh in range(self.resources):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
-        if self.biome == 'sheep':
+        elif self.biome == 'sheep':
             pygame.draw.rect(self.image,'white',(s*0.25,0,s*3*0.25,s*0.5))
             pygame.draw.rect(self.image,'black',(0,0,s*0.25,s*0.25))
             pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
             pygame.draw.line(self.image,'black',(s*0.9,s*0.5),(s*0.9,s),3)
             for bleh in range(self.resources):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
-        if self.biome == 'desert':
+        elif self.biome == 'desert':
             pygame.draw.rect(self.image,[240, 202, 79],(0,0,s,s))
             pygame.draw.line(self.image,[35, 156, 11],(s/2,s),(s/2,s/8),int(1+(s/20)))
             pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),(0,s/2),int(1+(s/20)))
@@ -430,6 +433,8 @@ class Tile(pygame.sprite.Sprite):
             pygame.draw.line(self.image,[35, 156, 11],((s/8)*7,s/4),((s/8)*7,s/2),int(1+(s/20)))
             for bleh in range(self.resources):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
+        elif self.biome == 'ice':
+            self.image.fill('white')
 
     def get_pathfinding_value(self):
         if self.biome == 'water':

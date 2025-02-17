@@ -2,6 +2,7 @@ import numpy as np
 from scipy.signal import convolve2d
 from scipy.ndimage import gaussian_filter
 import cv2
+from random import random
 
 def make_diamond_mask(power):
     side = 2**power + 1
@@ -14,13 +15,14 @@ def center_crop(array, new_shape):
     end = start + new_shape
     return array[start[0]:end[0], start[1]:end[1]]
 
-def riverify(map, min_value=0, length=20):
+def riverify(map, min_value=0, length=20, thicken_rate=0.1):
     """Add a river to a map.
 
     Args:
         map (2D numpy ndarray): Initial height map.
         min_value (float): Value to drop river bottoms to. Defaults to 0.
         length (int): Length of the river. Defaults to 20.
+        thicken_rate (float): Rate at which river thickens
 
     Returns:
         2D numpy array: Modified height map.
@@ -31,6 +33,7 @@ def riverify(map, min_value=0, length=20):
     idx = np.array(range(map.shape[0]*map.shape[1])).flatten()
     # Get a list of probability weights corresponding to the map height
     probs = map.flatten()
+    probs = probs ** 2
     # Normalize probabilities
     probs -= probs.min()
     probs = probs / probs.sum()
@@ -46,6 +49,7 @@ def riverify(map, min_value=0, length=20):
     ]
 
     river_coords = [(x, y)]
+    thickness = 1
     for k in range(length-1):
         neighbor_heights = []
         for offset in neighbor_offsets:
@@ -55,8 +59,13 @@ def riverify(map, min_value=0, length=20):
                 neighbor_heights.append((nx, ny, map[nx, ny]))
             except IndexError:
                 pass
-        x, y, _ = min(neighbor_heights, key=lambda n:n[2])
-        river_coords.append((x, y))
+        neighbor_heights.sort(key=lambda n:n[2])
+        x, y, _ = neighbor_heights[0]
+        for j in range(min(thickness, len(neighbor_heights))):
+            rx, ry, _ = neighbor_heights[j]
+            river_coords.append((rx, ry))
+        if thickness <= 8 and random() < thicken_rate:
+            thickness += 1
 
     for x, y in river_coords:
         map[x, y] = min_value
