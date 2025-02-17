@@ -116,7 +116,7 @@ class Entity(pygame.sprite.Sprite):
     def harvest(self,tile='sheep'):
         try:
             if self.board[round(self.x/10), round(self.y/10)].biome==tile:
-                for bleh in range(len(self.board[round(self.x/10), round(self.y/10)].resources)):
+                for bleh in range(self.board[round(self.x/10), round(self.y/10)].resources):
                     ####self.resources.append(self.board.resources[bleh])
                     ####self.board.resources=[]
                     pass
@@ -126,7 +126,8 @@ class Entity(pygame.sprite.Sprite):
 
     def update_land(self,board):
         self.board=board
-
+def zone(dude,start,end):
+    dude.make_plan(destination=[randint(round(min(start[0],end[0])),round(max(start[0],end[0]))),randint(round(min(start[1],end[1])),round(max(start[1],end[1])))])
 class Traveler(Entity):
     def __init__(self, *args, **kwargs):
         super().__init__(*args, **kwargs)
@@ -150,8 +151,8 @@ class Traveler(Entity):
 
     def make_plan(self, destination=None):
         if destination is None:
-            destination = self.board.get_random_point()
-        self.plan = self.board.find_path((int(self.x), int(self.y)), destination.tile_coords)
+            destination = self.board.get_random_point().tile_coords
+        self.plan = self.board.find_path((int(self.x), int(self.y)), destination)
 
 class Adjust:
     def __init__(self,x,y,node,width,height,start=0,color='white'):
@@ -206,13 +207,13 @@ def create_board(width_in_tiles, height_in_tiles):
     height=height_in_tiles * Tile.size
 
     board = Board(width_in_tiles, height_in_tiles)
-    map=   make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
+    map=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=1, integer=False)
     map=islandify(map, 0.25, 5, min_value=-0.25, max_value=1)
-    # ore=   make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
-    # fish=  make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
-    # wheat= make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
-    # sand=  make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
-    # lumber=make_map((width_in_tiles,height_in_tiles), blur_size=3, max_value=3, integer=True)
+    ore=make_map((width_in_tiles,height_in_tiles),blur_size=3, max_value=4,integer=True)
+    fish=make_map((width_in_tiles,height_in_tiles),blur_size=3, max_value=4,integer=True)
+    wheat=make_map((width_in_tiles,height_in_tiles),blur_size=3, max_value=4,integer=True)
+    sand=make_map((width_in_tiles,height_in_tiles),blur_size=3, max_value=4,integer=True)
+    lumber=make_map((width_in_tiles,height_in_tiles),blur_size=3, max_value=4,integer=True)
     num_rivers = goodrand('randint', (7, 1), (8, 2), (9, 3), (10, 2), (11, 1))
     min_river_length = 10
     max_river_length = 100
@@ -263,7 +264,18 @@ def create_board(width_in_tiles, height_in_tiles):
             #     for blih in range(ores[bleh][bluh]):
             #         board[bleh, bluh].resources.append('ore')
 
-            new_tile = Tile(tile_coords=(bleh, bluh), biome=biome)
+            if biome=='water':
+                new_tile = Tile(tile_coords=(bleh, bluh), biome=biome,resources=fish[bleh,bluh])
+            elif biome=='grass':
+                new_tile = Tile(tile_coords=(bleh, bluh), biome=biome,resources=wheat[bleh,bluh])
+            elif biome=='trees':
+                new_tile = Tile(tile_coords=(bleh, bluh), biome=biome,resources=lumber[bleh,bluh])
+            elif biome=='desert':
+                new_tile = Tile(tile_coords=(bleh, bluh), biome=biome,resources=sand[bleh,bluh])
+            elif biome=='mountains':
+                new_tile = Tile(tile_coords=(bleh, bluh), biome=biome,resources=ore[bleh,bluh])
+            elif biome=='sheep':
+                new_tile = Tile(tile_coords=(bleh, bluh), biome=biome,resources=randint(1,3))
             board[bleh, bluh] = new_tile
 
     board.update_image()
@@ -384,6 +396,8 @@ class Tile(pygame.sprite.Sprite):
     def update_image(self):
         s = Tile.size
         self.image = pygame.Surface((s, s))
+        print(self.biome)
+        print(self.resources)
         if self.biome == 'water':
             # Draw water background
             self.image.fill('blue')
@@ -393,19 +407,19 @@ class Tile(pygame.sprite.Sprite):
 
         if self.biome == 'mountains':
             pygame.draw.polygon(self.image, 'gray', ((0, s), (s*0.5,0),(s,s),(0,s)))
-            for bleh in range(len(self.resources)):
+            for bleh in range(self.resources):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
         if self.biome == 'trees':
             pygame.draw.line(self.image,'brown',(s*0.5,s*0.5),(s*0.5,s),5)
             pygame.draw.rect(self.image,[0,100,0],(0,0,s,s*0.5))
-            for bleh in range(len(self.resources)):
+            for bleh in range(self.resources):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
         if self.biome == 'sheep':
             pygame.draw.rect(self.image,'white',(s*0.25,0,s*3*0.25,s*0.5))
             pygame.draw.rect(self.image,'black',(0,0,s*0.25,s*0.25))
             pygame.draw.line(self.image,'black',(s*0.3,s*0.5),(s*0.3,s),3)
             pygame.draw.line(self.image,'black',(s*0.9,s*0.5),(s*0.9,s),3)
-            for bleh in range(len(self.resources)):
+            for bleh in range(self.resources):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
         if self.biome == 'desert':
             pygame.draw.rect(self.image,[240, 202, 79],(0,0,s,s))
@@ -414,7 +428,7 @@ class Tile(pygame.sprite.Sprite):
             pygame.draw.line(self.image,[35, 156, 11],(s/2,s/2),((s/8)*7,s/2),int(1+(s/20)))
             pygame.draw.line(self.image,[35, 156, 11],(0,(s/8)*3),(0,s/2),int(1+(s/20)))
             pygame.draw.line(self.image,[35, 156, 11],((s/8)*7,s/4),((s/8)*7,s/2),int(1+(s/20)))
-            for bleh in range(len(self.resources)):
+            for bleh in range(self.resources):
                 pygame.draw.circle(self.image,'black',(((bleh+1)*(s/3)-s/6),s/6),s/6)
 
     def get_pathfinding_value(self):

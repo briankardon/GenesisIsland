@@ -3,7 +3,7 @@ import sys
 from PygameWidgets import *
 from GenesisUtils import *
 from random import randint, choice
-
+from copy import copy
 pygame.init()
 Clock=pygame.time.Clock()
 
@@ -84,6 +84,8 @@ while True:
 
     paused = False
     pygame.mouse.set_visible(False)
+    start_zone=None
+    end_zone=None
     while True:
         # If necessary, update tile images for new zoom
         new_tile_size = Tile.size
@@ -114,6 +116,14 @@ while True:
                 new_x_screen, new_y_screen = tile2Screen(old_x_tile, old_y_tile)
                 Tile.x0 += (new_x_screen - x)
                 Tile.y0 += (new_y_screen - y)
+            if event.type==pygame.MOUSEBUTTONDOWN:
+                start_zone=list(screen2Tile(x,y))
+                end_zone=list(screen2Tile(x,y))
+            if event.type==pygame.MOUSEBUTTONUP:
+                for peep in peeps:
+                    zone(peep,start_zone,end_zone)
+                start_zone=None
+                end_zone=None
             elif event.type==pygame.MOUSEBUTTONDOWN:
                 if keys[pygame.K_LSHIFT]:
                     x_tile, y_tile = screen2Tile(x, y)
@@ -155,11 +165,15 @@ while True:
         if exit:
             pygame.quit()
             sys.exit()
-
         screen.fill('blue')
         board.draw(screen)
         peeps.draw(screen)
-
+        if start_zone!=None:
+            end_zone=list(screen2Tile(x,y))
+        if start_zone!=None and (abs(start_zone[0]-end_zone[0])>4 or abs(start_zone[1]-end_zone[1])>4):
+            ul_zone=tile2Screen(min(start_zone[0], end_zone[0]), min(start_zone[1], end_zone[1]))
+            lr_zone=tile2Screen(max(start_zone[0], end_zone[0]), max(start_zone[1], end_zone[1]))
+            pygame.draw.rect(screen,'purple',(*ul_zone,lr_zone[0]-ul_zone[0], lr_zone[1]-ul_zone[1]),3)
         if paused:
             menu.update()
             menu.draw(screen)
